@@ -1,59 +1,86 @@
-# Welcome to Your New Wails3 Project!
+<p align="center">
+  <img src="frontend/src/assets/images/logo.png" alt="GitModdy Logo" width="120" />
+</p>
 
-Congratulations on generating your Wails3 application! This README will guide you through the next steps to get your project up and running.
+<h1 align="center">GitModdy</h1>
 
-## Getting Started
+<p align="center">
+  <strong>A sleek, high-fidelity desktop Git history editor built with Wails v3 and React.</strong>
+</p>
 
-1. Navigate to your project directory in the terminal.
+<p align="center">
+  <img src="frontend/src/assets/images/screenshot.webp" alt="GitModdy Screenshot" width="100%" style="border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.08);" />
+</p>
 
-2. To run your application in development mode, use the following command:
+---
 
-   ```
-   wails3 dev
-   ```
+## 📖 About the Project
 
-   This will start your application and enable hot-reloading for both frontend and backend changes.
+**GitModdy** is a desktop Git tool designed to help you edit your local repository's history with ease and speed. Powered by the robust performance of `git-filter-repo`, it allows you to rewrite commit messages, change authors' names and emails, and modify commit dates safely.
 
-3. To build your application for production, use:
+### 🌟 Key Features
 
-   ```
-   wails3 build
-   ```
+*   **Interactive Commit History Tree**: Browse through your repository's commits sequentially in a clean, visual log.
+*   **Author & Committer Rewriting**: Change names and emails for specific commits or map contributor identities.
+*   **Commit Metadata Editing**: Rewrite commit titles, descriptions, and dates.
+*   **Safety Guards & Dry Run**: Preview your modified history changes side-by-side with the original history before applying the rewrite.
+*   **Platform Installation Checks**: Automatically detects if `git-filter-repo` is installed and guides you with specific instructions for macOS, Windows, and Linux.
+*   **Sleek Dark Theme**: Elegant GitHub Desktop-style dark interface optimized for development workflow.
 
-   This will create a production-ready executable in the `build` directory.
+---
 
-## Exploring Wails3 Features
+## 🚀 Download Releases
 
-Now that you have your project set up, it's time to explore the features that Wails3 offers:
+Pre-compiled production binaries for all major desktop platforms are available on the [Releases Page](https://github.com/0necontroller/gitmoddy/releases):
 
-1. **Check out the examples**: The best way to learn is by example. Visit the `examples` directory in the `v3/examples` directory to see various sample applications.
+*   🍏 **macOS** (Intel / Apple Silicon compat)
+*   🪟 **Windows** (x64)
+*   🐧 **Linux** (Ubuntu / Debian compat)
 
-2. **Run an example**: To run any of the examples, navigate to the example's directory and use:
+---
 
-   ```
-   go run .
-   ```
+## 🛠️ Run & Build Instructions
 
-   Note: Some examples may be under development during the alpha phase.
+### Prerequisites
 
-3. **Explore the documentation**: Visit the [Wails3 documentation](https://v3.wails.io/) for in-depth guides and API references.
+To run or build GitModdy from source, you will need the following tools:
 
-4. **Join the community**: Have questions or want to share your progress? Join the [Wails Discord](https://discord.gg/JDdSxwjhGf) or visit the [Wails discussions on GitHub](https://github.com/wailsapp/wails/discussions).
+1.  **Go** (1.21+)
+2.  **Node.js** & **pnpm** (or npm/yarn)
+3.  **Wails v3 CLI**
+4.  **git-filter-repo** (Required for rewriting commits):
+    *   **macOS**: `brew install git-filter-repo`
+    *   **Windows**: `pip install git-filter-repo`
+    *   **Linux**: `sudo apt install git-filter-repo`
 
-## Project Structure
+### Development
 
-Take a moment to familiarize yourself with your project structure:
+Start the development server with live-reloading:
 
-- `frontend/`: Contains your frontend code (HTML, CSS, JavaScript/TypeScript)
-- `main.go`: The entry point of your Go backend
-- `app.go`: Define your application structure and methods here
-- `wails.json`: Configuration file for your Wails project
+```bash
+wails3 dev
+```
 
-## Next Steps
+### Production Build
 
-1. Modify the frontend in the `frontend/` directory to create your desired UI.
-2. Add backend functionality in `main.go`.
-3. Use `wails3 dev` to see your changes in real-time.
-4. When ready, build your application with `wails3 build`.
+Compile a production binary for your current operating system:
 
-Happy coding with Wails3! If you encounter any issues or have questions, don't hesitate to consult the documentation or reach out to the Wails community.
+```bash
+wails3 build
+```
+
+This generates a ready-to-run executable in the `bin/` directory.
+
+### Running Backend Tests
+
+You can verify the backend functionality using standard Go testing:
+
+```bash
+go test -v ./...
+```
+
+---
+
+## 📜 License
+
+Distributed under the MIT License.

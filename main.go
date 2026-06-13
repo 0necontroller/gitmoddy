@@ -70,6 +70,8 @@ func main() {
 			Backdrop:                application.MacBackdropTranslucent,
 			TitleBar:                application.MacTitleBarHiddenInset,
 		},
+		Width: 1024,
+		Height: 768,
 		BackgroundColour: application.NewRGB(27, 38, 54),
 		URL:              "/",
 	})
