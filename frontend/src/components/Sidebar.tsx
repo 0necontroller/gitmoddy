@@ -33,6 +33,7 @@ function relativeTime(dateStr: string): string {
 interface PopoverData {
   commit: Commit;
   top: number;
+  left: number;
 }
 
 function CommitPopover({
@@ -44,7 +45,7 @@ function CommitPopover({
   mailmap: Record<number, Identity>;
   repoPath: string;
 }) {
-  const { commit, top } = data;
+  const { commit, top, left } = data;
   const author = mailmap[commit.committer] ?? commit.originalAuthor;
 
   const [stats, setStats] = useState<{
@@ -84,7 +85,7 @@ function CommitPopover({
 
   return (
     <div
-      style={{ position: "fixed", top: Math.max(8, top), left: 268 }}
+      style={{ position: "fixed", top: Math.max(8, top), left }}
       className="z-50 w-[300px] bg-[#2a2b2f] border border-white/[0.12] rounded-xl
                  shadow-2xl shadow-black/60 p-4 pointer-events-none"
     >
@@ -158,8 +159,7 @@ export default function Sidebar() {
   } = useAppContext();
 
   const selectedHash = selectedCommit?.hash ?? null;
-  const onSelectCommit = (commit: Commit) =>
-    selectCommit(commit);
+  const onSelectCommit = (commit: Commit) => selectCommit(commit);
   const onDryRun = () => setView("dry-run");
   const onApply = () => setView("apply");
   const onAddContributor = (identity: Identity) =>
@@ -175,7 +175,7 @@ export default function Sidebar() {
           loadMoreCommits();
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
     const currentSentinel = loaderRef.current;
     if (currentSentinel) {
@@ -225,7 +225,7 @@ export default function Sidebar() {
 
   return (
     <>
-      <aside className="w-[260px] shrink-0 bg-[#252629] border-r border-white/[0.08] flex flex-col overflow-hidden">
+      <aside className="w-full h-full bg-[#252629] flex flex-col overflow-hidden">
         {/* ── Tab Bar ── */}
         <div className="flex shrink-0 border-b border-white/[0.08]">
           {(["changes", "contributors"] as const).map((tab) => (
@@ -278,7 +278,11 @@ export default function Sidebar() {
                           const rect = (
                             e.currentTarget as HTMLElement
                           ).getBoundingClientRect();
-                          setPopover({ commit, top: rect.top });
+                          setPopover({
+                            commit,
+                            top: rect.top,
+                            left: rect.right + 8,
+                          });
                         }}
                         onMouseLeave={() => setPopover(null)}
                       >
@@ -365,7 +369,10 @@ export default function Sidebar() {
 
                   {/* Infinite scroll sentinel */}
                   {hasMore && (
-                    <div ref={loaderRef} className="py-4 flex justify-center items-center">
+                    <div
+                      ref={loaderRef}
+                      className="py-4 flex justify-center items-center"
+                    >
                       {isLoadingMore ? (
                         <div className="flex items-center gap-1.5 text-[11px] text-[#888a91]">
                           <div className="w-3.5 h-3.5 border border-[#888a91] border-t-transparent rounded-full animate-spin" />

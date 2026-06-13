@@ -2,17 +2,42 @@ import Sidebar from "../../components/Sidebar";
 import CommitDiffView from "../../components/CommitDiffView";
 import { useAppContext } from "../../context/AppContext";
 import { GitCommit } from "lucide-react";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 
 export default function RepoPage() {
   const { repoPath, selectedCommit } = useAppContext();
 
-  return (
-    <>
-      {repoPath && <Sidebar />}
+  if (!repoPath) {
+    return (
       <main className="flex flex-col flex-1 bg-[#1a1b1e] min-w-0 overflow-hidden">
-        {selectedCommit ? <CommitDiffView /> : <EmptyState repoPath={repoPath} />}
+        <EmptyState repoPath="" />
       </main>
-    </>
+    );
+  }
+
+  return (
+    <ResizablePanelGroup orientation="horizontal" className="w-full h-full">
+      <ResizablePanel defaultSize="40%" minSize="20%" maxSize="50%">
+        <Sidebar />
+      </ResizablePanel>
+      <ResizableHandle
+        withHandle
+        className="bg-white/[0.08] hover:bg-[#ec4f31]/50 transition-colors"
+      />
+      <ResizablePanel defaultSize="60%">
+        <main className="flex flex-col h-full bg-[#1a1b1e] min-w-0 overflow-hidden">
+          {selectedCommit ? (
+            <CommitDiffView />
+          ) : (
+            <EmptyState repoPath={repoPath} />
+          )}
+        </main>
+      </ResizablePanel>
+    </ResizablePanelGroup>
   );
 }
 
@@ -29,7 +54,7 @@ function EmptyState({ repoPath }: { repoPath: string }) {
         <p className="text-[11.5px] text-[#555760]">
           {repoPath
             ? "Click any commit in the sidebar to view its diff"
-            : "Click \"Current Repository\" in the top bar to get started"}
+            : 'Click "Current Repository" in the top bar to get started'}
         </p>
       </div>
     </div>
