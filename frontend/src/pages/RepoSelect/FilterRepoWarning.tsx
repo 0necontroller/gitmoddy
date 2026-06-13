@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import { System } from "@wailsio/runtime";
 import Button from "../../components/ui/button";
 import { useAppContext } from "../../context/AppContext";
 import CommandLine from "./CommandLine";
@@ -11,11 +12,15 @@ export default function FilterRepoWarning() {
     "macos",
   );
 
-  useState(() => {
-    const ua = window.navigator.userAgent.toLowerCase();
-    if (ua.includes("win")) setActiveTab("windows");
-    else if (ua.includes("linux")) setActiveTab("linux");
-  });
+  const getEnvironment = async () => {
+    if (System.IsWindows()) setActiveTab("windows");
+    else if (System.IsLinux()) setActiveTab("linux");
+    else setActiveTab("macos");
+  };
+
+  useEffect(() => {
+    getEnvironment();
+  }, []);
 
   const [checking, setChecking] = useState(false);
 
@@ -149,9 +154,8 @@ export default function FilterRepoWarning() {
             <span>🛠️</span> Verification
           </p>
           <p className="text-[11.5px] text-[#888a91] mt-1 leading-relaxed">
-            After running the installation commands for your platform, open
-            a fresh terminal window and verify it works by checking the
-            version:
+            After running the installation commands for your platform, open a
+            fresh terminal window and verify it works by checking the version:
           </p>
         </div>
         <CommandLine cmd="git filter-repo --version" />

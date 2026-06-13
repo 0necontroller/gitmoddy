@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { ChevronRight, ChevronDown, GitBranch, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router";
+import { System } from "@wailsio/runtime";
 import logoImage from "../assets/images/logo.png";
 import { useAppContext } from "../context/AppContext";
+import { ChevronRight, ChevronDown, GitBranch, RefreshCw } from "lucide-react";
+import { cn } from "../lib/cn";
 
 export default function TopBar() {
   const { repoName, repoLoaded, synced, setSynced } = useAppContext();
@@ -10,14 +12,23 @@ export default function TopBar() {
   const navigate = useNavigate();
 
   return (
-    <header className="drag-region relative flex pl-24 items-stretch h-[52px] bg-[#2a2b2f] border-b border-white/[0.08] shrink-0">
+    <header
+      className={cn(
+        "drag-region relative flex items-stretch h-[52px] bg-[#2a2b2f] border-b border-white/[0.08] shrink-0",
+        System.IsMac() ? "pl-24" : "",
+      )}
+    >
       {/* Divider */}
-      <div className="w-px bg-white/[0.08] self-stretch my-2" />
+      {System.IsMac() ? (
+        <div />
+      ) : (
+        <div className="w-px bg-white/[0.08] self-stretch my-2" />
+      )}
 
       {/* ── Panel 1: Current Repository ── */}
       <div
         className="no-drag-region flex items-center gap-[9px] px-5 min-w-0 cursor-pointer transition-colors hover:bg-white/[0.045]"
-        onClick={() => navigate('/')}
+        onClick={() => navigate("/")}
       >
         <span className="text-[#888a91] flex items-center shrink-0">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -132,7 +143,6 @@ export default function TopBar() {
               className="text-[#555760] shrink-0 ml-auto"
             />
           </div>
-
         </>
       )}
 
@@ -141,7 +151,7 @@ export default function TopBar() {
         <div className="w-px bg-white/[0.08] self-stretch my-2" />
         <div
           className="flex items-center justify-center px-5 cursor-pointer hover:bg-white/[0.045] transition-colors"
-          onClick={() => navigate('/about')}
+          onClick={() => navigate("/about")}
           title="About GitModdy"
         >
           <img
