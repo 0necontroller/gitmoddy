@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import { Commit, PendingChange } from '../types';
 import Button from './ui/button';
+import { parseGitDate } from '../lib/date';
 
 interface CommitEditDialogProps {
   commit: Commit;
@@ -16,7 +17,7 @@ interface CommitEditDialogProps {
 function toDatetimeLocal(iso: string): string {
   if (!iso) return '';
   try {
-    return new Date(iso).toISOString().slice(0, 16);
+    return parseGitDate(iso).toISOString().slice(0, 16);
   } catch {
     return '';
   }
@@ -48,8 +49,8 @@ export default function CommitEditDialog({
       change.newTitle = title.trim();
     }
     if (dateLocal) {
-      const iso = new Date(dateLocal).toISOString();
-      if (iso !== new Date(commit.date).toISOString()) {
+      const iso = parseGitDate(dateLocal).toISOString();
+      if (iso !== parseGitDate(commit.date).toISOString()) {
         change.newDate = iso;
       }
     }
@@ -115,9 +116,9 @@ export default function CommitEditDialog({
             />
             {(minDate || maxDate) && (
               <p className="text-[10.5px] text-[#555760] mt-1.5 space-x-2">
-                {minDate && <span>After: {new Date(minDate).toLocaleString()}</span>}
+                {minDate && <span>After: {parseGitDate(minDate).toLocaleString()}</span>}
                 {minDate && maxDate && <span>·</span>}
-                {maxDate && <span>Before: {new Date(maxDate).toLocaleString()}</span>}
+                {maxDate && <span>Before: {parseGitDate(maxDate).toLocaleString()}</span>}
               </p>
             )}
           </div>

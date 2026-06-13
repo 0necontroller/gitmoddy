@@ -1,5 +1,6 @@
 import { ArrowRight } from 'lucide-react';
 import { Commit, Identity, PendingChange } from '../types';
+import { parseGitDate } from '../lib/date';
 
 interface ChangeCardProps {
   commit: Commit;
@@ -76,10 +77,10 @@ export default function ChangeCard({ commit, change, mailmap }: ChangeCardProps)
       {newDate && newDate !== commit.date && (
         <div className="flex items-center gap-2 bg-black/20 rounded-lg px-3 py-2 text-[11px]">
           <span className="text-[#888a91]">
-            {commit.date ? new Date(commit.date).toLocaleDateString() : 'unknown'}
+            {commit.date ? parseGitDate(commit.date).toLocaleDateString() : 'unknown'}
           </span>
           <ArrowRight size={10} className="text-[#555760] shrink-0" />
-          <span className="text-[#4b8ef0]">{new Date(newDate).toLocaleDateString()}</span>
+          <span className="text-[#4b8ef0]">{parseGitDate(newDate).toLocaleDateString()}</span>
         </div>
       )}
     </div>

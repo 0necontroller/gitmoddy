@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import { Commit, Identity } from "../types";
 import Button from "./ui/button";
 import { cn } from "../lib/cn";
+import { parseGitDate } from "../lib/date";
 import { useAppContext } from "../context/AppContext";
 import Avatar from "./Avatar";
 
@@ -11,7 +12,9 @@ import Avatar from "./Avatar";
 function relativeTime(dateStr: string): string {
   if (!dateStr) return "";
   try {
-    const diff = Date.now() - new Date(dateStr).getTime();
+    const parsedDate = parseGitDate(dateStr);
+    const diff = Date.now() - parsedDate.getTime();
+    if (isNaN(diff)) return "";
     const m = Math.floor(diff / 60_000);
     const h = Math.floor(diff / 3_600_000);
     const d = Math.floor(diff / 86_400_000);
@@ -19,7 +22,7 @@ function relativeTime(dateStr: string): string {
     if (m < 60) return `${m}m ago`;
     if (h < 24) return `${h}h ago`;
     if (d < 30) return `${d}d ago`;
-    return new Date(dateStr).toLocaleDateString();
+    return parsedDate.toLocaleDateString();
   } catch {
     return "";
   }
@@ -71,7 +74,7 @@ function CommitPopover({
         {commit.date && (
           <>
             <span>·</span>
-            <span>{new Date(commit.date).toLocaleString()}</span>
+            <span>{parseGitDate(commit.date).toLocaleString()}</span>
           </>
         )}
       </div>

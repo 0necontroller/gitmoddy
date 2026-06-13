@@ -4,6 +4,7 @@ import { CommitDetail } from "../types";
 import AuthorSelect from "./AuthorSelect";
 import CommitEditDialog from "./CommitEditDialog";
 import { useAppContext } from "../context/AppContext";
+import { parseGitDate } from "../lib/date";
 
 // The GetCommitDetail binding is added to gitService.go and will be available
 // after running `wails3 task generate:bindings`.
@@ -193,7 +194,7 @@ export default function CommitDiffView() {
                 </span>
                 <span>·</span>
                 <span>
-                  {detail.date ? new Date(detail.date).toLocaleString() : "—"}
+                  {detail.date ? parseGitDate(detail.date).toLocaleString() : "—"}
                 </span>
                 {detail.filesChanged > 0 && (
                   <>

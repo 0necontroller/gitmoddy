@@ -1,5 +1,37 @@
 import { format, formatDistanceToNow } from "date-fns";
 
+export function parseGitDate(dateStr: string): Date {
+  if (!dateStr) return new Date(NaN);
+  
+  let cleaned = dateStr.trim();
+  // Try normal constructor first
+  let d = new Date(cleaned);
+  if (!isNaN(d.getTime())) {
+    return d;
+  }
+  
+  // Convert "2026-06-13 17:16:11 +0300" -> "2026-06-13T17:16:11+03:00"
+  cleaned = cleaned.replace(" ", "T");
+  cleaned = cleaned.replace(" ", "");
+  
+  const tzMatch = cleaned.match(/([+-])(\d{2})(\d{2})$/);
+  if (tzMatch) {
+    cleaned = cleaned.replace(/([+-])(\d{2})(\d{2})$/, "$1$2:$3");
+  }
+  
+  d = new Date(cleaned);
+  if (!isNaN(d.getTime())) {
+    return d;
+  }
+  
+  const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (match) {
+    return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  }
+  
+  return new Date(dateStr);
+}
+
 /**
  * Format date to MMMM dd, yyyy at hh:mm a
  * @param date - The date to format
@@ -11,7 +43,7 @@ export function formatDate(
   date: string,
   formatLayout: string = "MMMM dd, yyyy 'at' hh:mm a",
 ): string {
-  const createdAtDate = new Date(date);
+  const createdAtDate = parseGitDate(date);
 
   if (isNaN(createdAtDate.getTime())) {
     return "----";
@@ -27,7 +59,7 @@ export function formatDate(
  * e.g. 12:34 PM 01/01/2023
  * */
 export function formatMessageDate(date: string): string {
-  const createdAtDate = new Date(date);
+  const createdAtDate = parseGitDate(date);
 
   if (isNaN(createdAtDate.getTime())) {
     return "----";
@@ -43,7 +75,10 @@ export function formatMessageDate(date: string): string {
  * e.g. 2 days ago
  * */
 export function dateDistance(date: string): string {
-  const createdAtDate = new Date(date);
+  const createdAtDate = parseGitDate(date);
+  if (isNaN(createdAtDate.getTime())) {
+    return "Never";
+  }
 
   const result = formatDistanceToNow(createdAtDate, { addSuffix: true });
 
