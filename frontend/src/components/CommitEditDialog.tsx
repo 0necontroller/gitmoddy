@@ -6,8 +6,8 @@ import { parseGitDate } from '../lib/date';
 
 interface CommitEditDialogProps {
   commit: Commit;
-  commitIndex: number; // index in the original (oldest→newest) array
-  allCommits: Commit[];
+  prevCommitDate?: string | null;
+  nextCommitDate?: string | null;
   existing?: PendingChange;
   onSave: (change: PendingChange) => void;
   onClose: () => void;
@@ -25,8 +25,8 @@ function toDatetimeLocal(iso: string): string {
 
 export default function CommitEditDialog({
   commit,
-  commitIndex,
-  allCommits,
+  prevCommitDate,
+  nextCommitDate,
   existing,
   onSave,
   onClose,
@@ -36,12 +36,8 @@ export default function CommitEditDialog({
     toDatetimeLocal(existing?.newDate ?? commit.date)
   );
 
-  // Chronological constraints — prev commit is index-1, next commit is index+1
-  // allCommits is oldest→newest, so prev = index-1, next = index+1
-  const prevCommit = commitIndex > 0 ? allCommits[commitIndex - 1] : null;
-  const nextCommit = commitIndex < allCommits.length - 1 ? allCommits[commitIndex + 1] : null;
-  const minDate = prevCommit?.date ? toDatetimeLocal(prevCommit.date) : undefined;
-  const maxDate = nextCommit?.date ? toDatetimeLocal(nextCommit.date) : undefined;
+  const minDate = prevCommitDate ? toDatetimeLocal(prevCommitDate) : undefined;
+  const maxDate = nextCommitDate ? toDatetimeLocal(nextCommitDate) : undefined;
 
   const handleSave = () => {
     const change: PendingChange = {};

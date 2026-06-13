@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import logoImage from "../../assets/images/logo.png";
-import { GetAppVersion } from "../../../bindings/changeme/gitservice";
+import { GetAppVersion } from "../../../bindings/changeme/git/service";
 
 export default function AboutPage() {
   const [version, setVersion] = useState("Loading...");

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus } from "lucide-react";
 import { Commit, Identity } from "../types";
 import Button from "./ui/button";
@@ -6,6 +6,7 @@ import { cn } from "../lib/cn";
 import { parseGitDate } from "../lib/date";
 import { useAppContext } from "../context/AppContext";
 import Avatar from "./Avatar";
+import { GetCommitDetail } from "../../bindings/changeme/git/service";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -37,12 +38,49 @@ interface PopoverData {
 function CommitPopover({
   data,
   mailmap,
+  repoPath,
 }: {
   data: PopoverData;
   mailmap: Record<number, Identity>;
+  repoPath: string;
 }) {
   const { commit, top } = data;
   const author = mailmap[commit.committer] ?? commit.originalAuthor;
+
+  const [stats, setStats] = useState<{
+    filesChanged: number;
+    insertions: number;
+    deletions: number;
+  } | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setStats(null);
+    GetCommitDetail(repoPath, commit.hash)
+      .then((detail: any) => {
+        if (active && detail) {
+          setStats({
+            filesChanged: detail.filesChanged,
+            insertions: detail.insertions,
+            deletions: detail.deletions,
+          });
+        }
+      })
+      .catch((err: any) => {
+        console.error("Error fetching commit stats for popover:", err);
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [commit.hash, repoPath]);
 
   return (
     <div
@@ -78,6 +116,26 @@ function CommitPopover({
           </>
         )}
       </div>
+
+      {/* Stats */}
+      {loading ? (
+        <div className="mt-2.5 pt-2.5 border-t border-white/[0.06] flex gap-2 animate-pulse">
+          <div className="h-3 w-24 bg-[#3a3b3f] rounded" />
+          <div className="h-3 w-16 bg-[#238636]/30 rounded" />
+          <div className="h-3 w-16 bg-[#f85149]/30 rounded" />
+        </div>
+      ) : stats ? (
+        <div className="mt-2.5 pt-2.5 border-t border-white/[0.06] text-[10.5px] text-[#888a91] flex items-center gap-1 flex-wrap">
+          <span>
+            {stats.filesChanged} file{stats.filesChanged !== 1 ? "s" : ""}{" "}
+            changed,
+          </span>
+          <span className="text-[#56d364]">
+            {stats.insertions} insertions(+),
+          </span>
+          <span className="text-[#f85149]">{stats.deletions} deletions(-)</span>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -86,6 +144,7 @@ function CommitPopover({
 export default function Sidebar() {
   const {
     repoLoaded,
+    repoPath,
     commits,
     mailmap,
     selectedCommit,
@@ -93,15 +152,41 @@ export default function Sidebar() {
     selectCommit,
     setView,
     handleAddContributor: addContributorToContext,
+    loadMoreCommits,
+    hasMore,
+    isLoadingMore,
   } = useAppContext();
 
   const selectedHash = selectedCommit?.hash ?? null;
-  const onSelectCommit = (commit: Commit, idx: number) =>
-    selectCommit(commit, idx);
+  const onSelectCommit = (commit: Commit) =>
+    selectCommit(commit);
   const onDryRun = () => setView("dry-run");
   const onApply = () => setView("apply");
   const onAddContributor = (identity: Identity) =>
     addContributorToContext(identity);
+
+  const loaderRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!hasMore) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadMoreCommits();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    const currentSentinel = loaderRef.current;
+    if (currentSentinel) {
+      observer.observe(currentSentinel);
+    }
+    return () => {
+      if (currentSentinel) {
+        observer.unobserve(currentSentinel);
+      }
+    };
+  }, [loadMoreCommits, hasMore, commits]);
 
   const [activeTab, setActiveTab] = useState<"changes" | "contributors">(
     "changes",
@@ -111,8 +196,8 @@ export default function Sidebar() {
   const [newName, setNewName] = useState("");
   const [newEmail, setNewEmail] = useState("");
 
-  // Display newest first
-  const displayCommits = [...commits].reverse();
+  // commits are already in newest-first order
+  const displayCommits = commits;
 
   const changeCount = pendingChanges.size;
 
@@ -179,8 +264,6 @@ export default function Sidebar() {
                   <div className="absolute left-[27px] top-5 bottom-5 w-[2px] bg-[#e8e8ea]/25 rounded-full" />
 
                   {displayCommits.map((commit, displayIdx) => {
-                    // displayIdx 0 = newest; original idx = commits.length - 1 - displayIdx
-                    const originalIdx = commits.length - 1 - displayIdx;
                     const isHead = displayIdx === 0;
                     const isSelected = commit.hash === selectedHash;
                     const hasPending = pendingChanges.has(commit.hash);
@@ -200,7 +283,7 @@ export default function Sidebar() {
                         onMouseLeave={() => setPopover(null)}
                       >
                         <div
-                          onClick={() => onSelectCommit(commit, originalIdx)}
+                          onClick={() => onSelectCommit(commit)}
                           className={[
                             "flex items-start gap-3 pl-3 pr-2.5 py-2 cursor-pointer",
                             "border-l-2 transition-all duration-100",
@@ -279,6 +362,20 @@ export default function Sidebar() {
                       </div>
                     );
                   })}
+
+                  {/* Infinite scroll sentinel */}
+                  {hasMore && (
+                    <div ref={loaderRef} className="py-4 flex justify-center items-center">
+                      {isLoadingMore ? (
+                        <div className="flex items-center gap-1.5 text-[11px] text-[#888a91]">
+                          <div className="w-3.5 h-3.5 border border-[#888a91] border-t-transparent rounded-full animate-spin" />
+                          <span>Loading more commits…</span>
+                        </div>
+                      ) : (
+                        <div className="h-4" />
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -395,7 +492,9 @@ export default function Sidebar() {
       </aside>
 
       {/* Hover popover — rendered outside the aside to escape overflow */}
-      {popover && <CommitPopover data={popover} mailmap={mailmap} />}
+      {popover && (
+        <CommitPopover data={popover} mailmap={mailmap} repoPath={repoPath} />
+      )}
     </>
   );
 }

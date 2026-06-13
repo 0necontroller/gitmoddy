@@ -20,6 +20,15 @@ export interface ScanResult {
   mailmap: Record<number, Identity>;
 }
 
+export interface AuthorsResult {
+  mailmap: Record<number, Identity>;
+}
+
+export interface CommitPage {
+  commits: Commit[];
+  nextCursor: string;
+}
+
 export interface CommitDetail {
   hash: string;
   authorName: string;

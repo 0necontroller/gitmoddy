@@ -6,11 +6,7 @@ import CommitEditDialog from "./CommitEditDialog";
 import { useAppContext } from "../context/AppContext";
 import { parseGitDate } from "../lib/date";
 
-// The GetCommitDetail binding is added to gitService.go and will be available
-// after running `wails3 task generate:bindings`.
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore – populated after bindings regeneration
-import { GetCommitDetail } from "../../bindings/changeme/gitservice";
+import { GetCommitDetail } from "../../bindings/changeme/git/service";
 import Avatar from "./Avatar";
 
 // ─── Diff line renderer ────────────────────────────────────────────────────────
@@ -64,8 +60,8 @@ function DiffLine({ line }: { line: string }) {
 export default function CommitDiffView() {
   const {
     selectedCommit: commit,
-    selectedCommitIdx: commitIndex,
-    commits: allCommits,
+    prevCommitDate,
+    nextCommitDate,
     repoPath,
     mailmap,
     pendingChanges,
@@ -241,8 +237,8 @@ export default function CommitDiffView() {
       {editOpen && (
         <CommitEditDialog
           commit={commit}
-          commitIndex={commitIndex}
-          allCommits={allCommits}
+          prevCommitDate={prevCommitDate}
+          nextCommitDate={nextCommitDate}
           existing={pendingChange}
           onSave={handleCommitEdit}
           onClose={() => setEditOpen(false)}

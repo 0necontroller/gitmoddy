@@ -6,10 +6,7 @@ import ChangeCard from './ChangeCard';
 import Button from './ui/button';
 import { useAppContext } from '../context/AppContext';
 
-// RewriteHistory is the existing binding — already present in generated JS
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import { RewriteHistory } from '../../bindings/changeme/gitservice';
+import { RewriteHistory } from '../../bindings/changeme/git/service';
 
 const PUSH_CMD = 'git push origin --force --all';
 

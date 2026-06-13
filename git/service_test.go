@@ -1,4 +1,4 @@
-package main
+package git
 
 import (
 	"os"
@@ -11,11 +11,11 @@ import (
 
 func TestParseStatSummary(t *testing.T) {
 	tests := []struct {
-		name       string
-		input      string
-		wantFiles  int
-		wantIns    int
-		wantDel    int
+		name      string
+		input     string
+		wantFiles int
+		wantIns   int
+		wantDel   int
 	}{
 		{
 			name:      "empty string",
@@ -136,72 +136,111 @@ func initTestRepo(t *testing.T, dir string) {
 	must("commit", "-m", "add world")
 }
 
-// ─── ScanRepository ─────────────────────────────────────────────────────────
+// initMultiCommitRepo creates a git repository with N commits.
+func initMultiCommitRepo(t *testing.T, dir string, n int) {
+	t.Helper()
+	must := func(args ...string) {
+		t.Helper()
+		cmd := exec.Command("git", args...)
+		cmd.Dir = dir
+		cmd.Env = append(os.Environ(),
+			"GIT_AUTHOR_NAME=Test User",
+			"GIT_AUTHOR_EMAIL=test@example.com",
+			"GIT_COMMITTER_NAME=Test User",
+			"GIT_COMMITTER_EMAIL=test@example.com",
+		)
+		if out, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %s", args, out)
+		}
+	}
 
-// TestScanRepository_NotARepo verifies an error is returned for a valid dir that is not a git repo.
-func TestScanRepository_NotARepo(t *testing.T) {
-	svc := &GitService{}
+	must("init")
+	must("config", "user.email", "test@example.com")
+	must("config", "user.name", "Test User")
+
+	for i := 1; i <= n; i++ {
+		f := filepath.Join(dir, "file.txt")
+		if err := os.WriteFile(f, []byte(string(rune(i))), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		must("add", ".")
+		must("commit", "-m", "commit number "+string(rune('0'+i)))
+	}
+}
+
+// ─── GetAuthors ─────────────────────────────────────────────────────────────
+
+func TestGetAuthors_NotARepo(t *testing.T) {
+	svc := &Service{}
 	dir := t.TempDir() // valid dir but not a git repo
-	_, err := svc.ScanRepository(dir)
+	_, err := svc.GetAuthors(dir)
 	if err == nil {
 		t.Fatal("expected error for non-git directory, got nil")
 	}
 }
 
-func TestScanRepository_ValidRepo(t *testing.T) {
+func TestGetAuthors_ValidRepo(t *testing.T) {
 	dir := t.TempDir()
 	initTestRepo(t, dir)
 
-	svc := &GitService{}
-	result, err := svc.ScanRepository(dir)
+	svc := &Service{}
+	result, err := svc.GetAuthors(dir)
 	if err != nil {
-		t.Fatalf("ScanRepository failed: %v", err)
+		t.Fatalf("GetAuthors failed: %v", err)
 	}
 	if result == nil {
-		t.Fatal("expected non-nil ScanResult")
-	}
-	if len(result.Commits) == 0 {
-		t.Error("expected at least one commit")
+		t.Fatal("expected non-nil AuthorsResult")
 	}
 	if len(result.Mailmap) == 0 {
 		t.Error("expected at least one mailmap entry")
 	}
-
-	// The single commit should reference slot 1 (the current user).
-	c := result.Commits[0]
-	if c.Committer != 1 {
-		t.Errorf("expected committer slot 1, got %d", c.Committer)
-	}
-	if c.Title != "initial commit" {
-		t.Errorf("unexpected title: %q", c.Title)
+	if result.Mailmap[1].Name != "Test User" || result.Mailmap[1].Email != "test@example.com" {
+		t.Errorf("unexpected mailmap entry: %+v", result.Mailmap[1])
 	}
 }
 
-func TestScanRepository_CommitFields(t *testing.T) {
+// ─── FetchCommitPage ─────────────────────────────────────────────────────────
+
+func TestFetchCommitPage_Pagination(t *testing.T) {
 	dir := t.TempDir()
-	initTestRepo(t, dir)
+	initMultiCommitRepo(t, dir, 5)
 
-	svc := &GitService{}
-	result, err := svc.ScanRepository(dir)
+	svc := &Service{}
+
+	// Page 1 (limit 2)
+	p1, err := svc.FetchCommitPage(dir, "", 2)
 	if err != nil {
-		t.Fatalf("ScanRepository failed: %v", err)
+		t.Fatalf("FetchCommitPage page 1 failed: %v", err)
+	}
+	if len(p1.Commits) != 2 {
+		t.Fatalf("expected 2 commits in page 1, got %d", len(p1.Commits))
+	}
+	if p1.NextCursor == "" {
+		t.Fatal("expected NextCursor not to be empty")
 	}
 
-	c := result.Commits[0]
-	if c.Hash == "" {
-		t.Error("commit hash must not be empty")
+	// Page 2 (limit 2)
+	p2, err := svc.FetchCommitPage(dir, p1.NextCursor, 2)
+	if err != nil {
+		t.Fatalf("FetchCommitPage page 2 failed: %v", err)
 	}
-	if len(c.Hash) != 40 {
-		t.Errorf("expected 40-char SHA1 hash, got %d chars", len(c.Hash))
+	if len(p2.Commits) != 2 {
+		t.Fatalf("expected 2 commits in page 2, got %d", len(p2.Commits))
 	}
-	if c.Date == "" {
-		t.Error("commit date must not be empty")
+	if p2.NextCursor == "" {
+		t.Fatal("expected NextCursor not to be empty")
 	}
-	if c.OriginalAuthor.Name == "" {
-		t.Error("originalAuthor.name must not be empty")
+
+	// Page 3 (limit 2)
+	p3, err := svc.FetchCommitPage(dir, p2.NextCursor, 2)
+	if err != nil {
+		t.Fatalf("FetchCommitPage page 3 failed: %v", err)
 	}
-	if c.OriginalAuthor.Email == "" {
-		t.Error("originalAuthor.email must not be empty")
+	if len(p3.Commits) != 1 {
+		t.Fatalf("expected 1 commit in page 3, got %d", len(p3.Commits))
+	}
+	if p3.NextCursor != "" {
+		t.Fatalf("expected empty NextCursor at the end of history, got %q", p3.NextCursor)
 	}
 }
 
@@ -211,7 +250,7 @@ func TestGetCommitDetail_BadHash(t *testing.T) {
 	dir := t.TempDir()
 	initTestRepo(t, dir)
 
-	svc := &GitService{}
+	svc := &Service{}
 	_, err := svc.GetCommitDetail(dir, "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef")
 	if err == nil {
 		t.Fatal("expected error for nonexistent hash, got nil")
@@ -222,13 +261,12 @@ func TestGetCommitDetail_ValidHash(t *testing.T) {
 	dir := t.TempDir()
 	initTestRepo(t, dir)
 
-	svc := &GitService{}
-	result, err := svc.ScanRepository(dir)
+	svc := &Service{}
+	result, err := svc.FetchCommitPage(dir, "", 10)
 	if err != nil {
-		t.Fatalf("ScanRepository: %v", err)
+		t.Fatalf("FetchCommitPage: %v", err)
 	}
-	// Use the second (newest) commit — it modifies an existing file so --stat has a summary line.
-	hash := result.Commits[len(result.Commits)-1].Hash
+	hash := result.Commits[0].Hash
 
 	detail, err := svc.GetCommitDetail(dir, hash)
 	if err != nil {
@@ -249,22 +287,20 @@ func TestGetCommitDetail_ValidHash(t *testing.T) {
 	if detail.AuthorEmail == "" {
 		t.Error("authorEmail must not be empty")
 	}
-	// The second commit modifies hello.txt, so filesChanged should be 1.
 	if detail.FilesChanged < 1 {
 		t.Errorf("expected filesChanged >= 1, got %d", detail.FilesChanged)
 	}
 }
 
 func TestCheckFilterRepo(t *testing.T) {
-	svc := &GitService{}
-	// Verify that CheckFilterRepo runs and returns a boolean value
+	svc := &Service{}
 	_ = svc.CheckFilterRepo()
 }
 
 func TestGetAppVersion(t *testing.T) {
-	svc := &GitService{}
+	svc := &Service{Version: "1.2.3"}
 	v := svc.GetAppVersion()
-	if v != Config.Version {
-		t.Errorf("expected version %s, got %s", Config.Version, v)
+	if v != "1.2.3" {
+		t.Errorf("expected version 1.2.3, got %s", v)
 	}
 }

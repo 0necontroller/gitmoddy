@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Identity, Commit } from '../../bindings/changeme/models';
-import { RewriteHistory } from '../../bindings/changeme/gitservice';
+import { Identity, Commit } from '../types';
+import { RewriteHistory } from '../../bindings/changeme/git/service';
 import { AlertTriangle, CheckCircle2, ArrowRight } from 'lucide-react';
 
 interface RewritePreviewStepProps {
