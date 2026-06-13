@@ -288,5 +288,10 @@ func (g *GitService) CheckFilterRepo() bool {
 	return err == nil
 }
 
+// GetAppVersion returns the current version of GitModdy.
+func (g *GitService) GetAppVersion() string {
+	return Config.Version
+}
+
 // Ensure strconv is used (suppress unused import if needed)
 var _ = strconv.Itoa

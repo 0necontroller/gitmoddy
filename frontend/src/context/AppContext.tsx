@@ -67,6 +67,27 @@ export function useAppContext(): AppContextValue {
   return ctx;
 }
 
+function beautifyError(errStr: string): string | null {
+  let msg = errStr;
+  try {
+    const parsed = JSON.parse(errStr);
+    if (parsed.message) {
+      msg = parsed.message;
+    }
+  } catch {}
+
+  if (
+    msg.includes("user cancelled directory selection") ||
+    msg.includes("cancelled")
+  ) {
+    return null;
+  }
+  if (msg.includes("not a git repository")) {
+    return "The selected directory is not a Git repository. Please choose a directory with a valid Git configuration.";
+  }
+  return msg;
+}
+
 // ── Provider ──────────────────────────────────────────────────────────────────
 export function AppProvider({ children }: { children: ReactNode }) {
   const [view, setViewInternal] = useState<AppView>('repo-select');
@@ -143,7 +164,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       setView('main');
     } catch (err: unknown) {
-      setError(String(err));
+      setError(beautifyError(String(err)));
     } finally {
       setIsLoading(false);
     }
@@ -161,7 +182,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       await openRepo(path);
     } catch (err: unknown) {
-      setError(String(err));
+      setError(beautifyError(String(err)));
       setIsLoading(false);
     }
   };

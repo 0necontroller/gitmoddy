@@ -260,3 +260,11 @@ func TestCheckFilterRepo(t *testing.T) {
 	// Verify that CheckFilterRepo runs and returns a boolean value
 	_ = svc.CheckFilterRepo()
 }
+
+func TestGetAppVersion(t *testing.T) {
+	svc := &GitService{}
+	v := svc.GetAppVersion()
+	if v != Config.Version {
+		t.Errorf("expected version %s, got %s", Config.Version, v)
+	}
+}

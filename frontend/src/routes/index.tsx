@@ -6,6 +6,7 @@ import RepoSelectPage from "../pages/RepoSelect";
 import RepoPage from "../pages/Repo";
 import DryRunPage from "../pages/DryRun";
 import ApplyPage from "../pages/Apply";
+import AboutPage from "../pages/About";
 
 export default function AppRoutes() {
   const { repoPath } = useAppContext();
@@ -13,7 +14,11 @@ export default function AppRoutes() {
   const location = useLocation();
 
   useEffect(() => {
-    if (!repoPath && location.pathname !== "/") {
+    if (
+      !repoPath &&
+      location.pathname !== "/" &&
+      location.pathname !== "/about"
+    ) {
       navigate("/");
     }
   }, [repoPath, location.pathname, navigate]);
@@ -25,6 +30,7 @@ export default function AppRoutes() {
         <Route path="/repo" element={<RepoPage />} />
         <Route path="/dry-run" element={<DryRunPage />} />
         <Route path="/apply" element={<ApplyPage />} />
+        <Route path="/about" element={<AboutPage />} />
       </Route>
     </Routes>
   );

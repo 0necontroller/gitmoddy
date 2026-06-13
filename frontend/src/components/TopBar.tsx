@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { ChevronRight, ChevronDown, GitBranch, RefreshCw } from "lucide-react";
+import { useNavigate } from "react-router";
 import logoImage from "../assets/images/logo.png";
 import { useAppContext } from "../context/AppContext";
 
 export default function TopBar() {
-  const { repoName, repoLoaded, synced, setView, setSynced } = useAppContext();
+  const { repoName, repoLoaded, synced, setSynced } = useAppContext();
   const [branchOpen, setBranchOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <header className="drag-region relative flex pl-24 items-stretch h-[52px] bg-[#2a2b2f] border-b border-white/[0.08] shrink-0">
@@ -15,7 +17,7 @@ export default function TopBar() {
       {/* ── Panel 1: Current Repository ── */}
       <div
         className="no-drag-region flex items-center gap-[9px] px-5 min-w-0 cursor-pointer transition-colors hover:bg-white/[0.045]"
-        onClick={() => setView('repo-select')}
+        onClick={() => navigate('/')}
       >
         <span className="text-[#888a91] flex items-center shrink-0">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -131,14 +133,24 @@ export default function TopBar() {
             />
           </div>
 
-          {/* Divider */}
-          <div className="w-px bg-white/[0.08] self-stretch my-2" />
-
-          <div className="flex items-center justify-center px-4">
-            <img src={logoImage} alt="Git moddy logo" className="w-8 h-8" />
-          </div>
         </>
       )}
+
+      {/* ── Panel 4: Logo (Far right) ── */}
+      <div className="no-drag-region flex items-stretch shrink-0 ml-auto">
+        <div className="w-px bg-white/[0.08] self-stretch my-2" />
+        <div
+          className="flex items-center justify-center px-5 cursor-pointer hover:bg-white/[0.045] transition-colors"
+          onClick={() => navigate('/about')}
+          title="About GitModdy"
+        >
+          <img
+            src={logoImage}
+            alt="Git moddy logo"
+            className="w-8 h-8 hover:scale-105 transition-transform"
+          />
+        </div>
+      </div>
     </header>
   );
 }
