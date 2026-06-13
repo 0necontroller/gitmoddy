@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Commit, Identity } from "../types";
-import AppButton from "./AppButton";
+import Button from "./ui/button";
 import { cn } from "../lib/cn";
 import { useAppContext } from "../context/AppContext";
 import Avatar from "./Avatar";
@@ -327,22 +327,22 @@ export default function Sidebar() {
                                focus:outline-none focus:border-[#ec4f31] transition-colors"
                   />
                   <div className="flex gap-2">
-                    <AppButton
+                    <Button
                       variant="primary"
                       size="sm"
                       onClick={handleAddContributor}
                       className="flex-1 !text-[11px]"
                     >
                       Add
-                    </AppButton>
-                    <AppButton
+                    </Button>
+                    <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setShowAddForm(false)}
                       className="flex-1 !text-[11px]"
                     >
                       Cancel
-                    </AppButton>
+                    </Button>
                   </div>
                 </div>
               ) : (
@@ -369,7 +369,7 @@ export default function Sidebar() {
             </div>
           )}
           <div className="flex gap-2 p-2.5">
-            <AppButton
+            <Button
               variant="ghost"
               size="sm"
               onClick={onDryRun}
@@ -377,8 +377,8 @@ export default function Sidebar() {
               className="flex-1 !text-[11.5px]"
             >
               Dry Run
-            </AppButton>
-            <AppButton
+            </Button>
+            <Button
               variant="primary"
               size="sm"
               onClick={onApply}
@@ -386,7 +386,7 @@ export default function Sidebar() {
               className="flex-1 !text-[11.5px]"
             >
               Apply
-            </AppButton>
+            </Button>
           </div>
         </div>
       </aside>

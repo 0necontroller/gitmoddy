@@ -1,6 +1,6 @@
 import { ArrowLeft, Eye } from 'lucide-react';
 import ChangeCard from './ChangeCard';
-import AppButton from './AppButton';
+import Button from './ui/button';
 import { useAppContext } from '../context/AppContext';
 
 export default function DryRunView() {
@@ -33,7 +33,7 @@ export default function DryRunView() {
           <span className="text-[11px] text-[#888a91] bg-white/[0.05] border border-white/[0.07] rounded-full px-3 py-1">
             {changedCommits.length} commit{changedCommits.length !== 1 ? 's' : ''} will change
           </span>
-          <AppButton
+          <Button
             variant="primary"
             size="sm"
             icon={<Eye size={13} />}
@@ -41,7 +41,7 @@ export default function DryRunView() {
             disabled={changedCommits.length === 0}
           >
             Proceed to Apply
-          </AppButton>
+          </Button>
         </div>
       </div>
 

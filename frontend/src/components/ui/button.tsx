@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 
-interface AppButtonProps {
+interface ButtonProps {
   children: ReactNode;
   onClick?: () => void;
   variant?: "primary" | "danger" | "ghost";
@@ -13,7 +13,7 @@ interface AppButtonProps {
   type?: "button" | "submit";
 }
 
-export default function AppButton({
+export default function Button({
   children,
   onClick,
   variant = "primary",
@@ -23,7 +23,7 @@ export default function AppButton({
   icon,
   className = "",
   type = "button",
-}: AppButtonProps) {
+}: ButtonProps) {
   const base =
     "inline-flex items-center cursor-pointer justify-center gap-2 font-semibold rounded transition-all duration-200 " +
     "select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1e1f22] " +

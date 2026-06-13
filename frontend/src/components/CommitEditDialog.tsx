@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { Commit, PendingChange } from '../types';
-import AppButton from './AppButton';
+import Button from './ui/button';
 
 interface CommitEditDialogProps {
   commit: Commit;
@@ -125,12 +125,12 @@ export default function CommitEditDialog({
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-2.5 px-6 py-4 border-t border-white/[0.08]">
-          <AppButton variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="ghost" size="sm" onClick={onClose}>
             Cancel
-          </AppButton>
-          <AppButton variant="primary" size="sm" onClick={handleSave}>
+          </Button>
+          <Button variant="primary" size="sm" onClick={handleSave}>
             Save Changes
-          </AppButton>
+          </Button>
         </div>
       </div>
     </div>

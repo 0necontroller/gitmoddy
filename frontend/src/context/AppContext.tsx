@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useNavigate, useLocation } from 'react-router';
 import { SelectRepository, ScanRepository, CheckFilterRepo } from '../../bindings/changeme/gitservice';
 import { Identity, Commit, PendingChange, AppView } from '../types';
 
@@ -68,7 +69,25 @@ export function useAppContext(): AppContextValue {
 
 // ── Provider ──────────────────────────────────────────────────────────────────
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [view, setView] = useState<AppView>('repo-select');
+  const [view, setViewInternal] = useState<AppView>('repo-select');
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const setView = (v: AppView) => {
+    setViewInternal(v);
+    if (v === 'repo-select') navigate('/');
+    else if (v === 'main') navigate('/repo');
+    else if (v === 'dry-run') navigate('/dry-run');
+    else if (v === 'apply') navigate('/apply');
+  };
+
+  useEffect(() => {
+    if (location.pathname === '/') setViewInternal('repo-select');
+    else if (location.pathname === '/repo') setViewInternal('main');
+    else if (location.pathname === '/dry-run') setViewInternal('dry-run');
+    else if (location.pathname === '/apply') setViewInternal('apply');
+  }, [location.pathname]);
+
   const [repoPath, setRepoPath] = useState('');
   const [commits, setCommits] = useState<Commit[]>([]);
   const [mailmap, setMailmap] = useState<Record<number, Identity>>({});

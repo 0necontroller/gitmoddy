@@ -1,0 +1,162 @@
+import {
+  Clock,
+  FolderOpen,
+  FolderX,
+  ChevronRight,
+  GitBranch,
+} from "lucide-react";
+import Button from "../../components/ui/button";
+import logoImage from "../../assets/images/logo.png";
+import { useAppContext } from "../../context/AppContext";
+import FilterRepoWarning from "./FilterRepoWarning";
+
+function getRepoName(path: string): string {
+  return path.split("/").filter(Boolean).pop() ?? path;
+}
+
+export default function RepoSelectPage() {
+  const {
+    recentRepos,
+    isLoading,
+    error,
+    handleBrowse,
+    openRepo,
+    removeRecentRepo,
+    filterRepoInstalled,
+  } = useAppContext();
+
+  return (
+    <div className="flex flex-col relative w-full h-full bg-main">
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 w-96 h-96 bg-cover bg-center opacity-10"
+        style={{ backgroundImage: `url(${logoImage})` }}
+      />
+      {/* Warning banner/card for git-filter-repo if not installed */}
+      {filterRepoInstalled === false ? (
+        <FilterRepoWarning />
+      ) : (
+        <div className="z-10 flex flex-col h-full w-full">
+          {/* Page header */}
+          <div className="px-10 pt-12 pb-8 border-b border-white/[0.05] shrink-0">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-9 h-9 bg-[#ec4f31]/15 border border-[#ec4f31]/25 rounded-xl flex items-center justify-center">
+                <GitBranch size={17} className="text-[#ec4f31]" />
+              </div>
+              <h1 className="text-2xl font-bold text-[#e8e8ea] tracking-tight">
+                Select Repository
+              </h1>
+            </div>
+            <p className="text-[13px] text-[#555760] ml-12">
+              Open a local Git repository to browse and rewrite its history.
+            </p>
+          </div>
+
+          {/* Scrollable body */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar px-10 py-8 space-y-8">
+            {/* Browse section */}
+            <div>
+              <Button
+                variant="primary"
+                size="lg"
+                icon={<FolderOpen size={16} />}
+                onClick={handleBrowse}
+                loading={isLoading}
+                disabled={!!filterRepoInstalled === false}
+              >
+                Browse for Repository
+              </Button>
+
+              {error && (
+                <p className="mt-3 text-[12px] text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+                  {error}
+                </p>
+              )}
+            </div>
+
+            {/* Recent repos */}
+            {recentRepos.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Clock size={12} className="text-[#555760]" />
+                  <span className="text-[10.5px] font-semibold text-[#555760] uppercase tracking-widest">
+                    Recent Repositories
+                  </span>
+                </div>
+
+                <div className="space-y-1.5">
+                  {recentRepos.map((path) => {
+                    const isDisabled = !!filterRepoInstalled === false;
+                    return (
+                      <div
+                        key={path}
+                        onClick={() => !isDisabled && openRepo(path)}
+                        className={`group flex items-center gap-3.5 bg-[#252629]/50 border border-white/[0.06] rounded-xl px-4 py-3.5 transition-all duration-150 ${
+                          isDisabled
+                            ? "opacity-45 cursor-not-allowed"
+                            : "hover:bg-[#2c2d31] hover:border-white/[0.12] cursor-pointer"
+                        }`}
+                      >
+                        {/* Folder icon */}
+                        <div
+                          className="w-9 h-9 bg-[#ec4f31]/10 border border-[#ec4f31]/20 rounded-lg
+                                  flex items-center justify-center shrink-0 transition-colors
+                                  group-hover:bg-[#ec4f31]/15 group-hover:border-[#ec4f31]/30"
+                        >
+                          <FolderOpen size={15} className="text-[#ec4f31]" />
+                        </div>
+
+                        {/* Repo info */}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] font-semibold text-[#e8e8ea] truncate">
+                            {getRepoName(path)}
+                          </p>
+                          <p className="text-[11px] text-[#555760] truncate mt-0.5">
+                            {path}
+                          </p>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            title="Remove from recent"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeRecentRepo(path);
+                            }}
+                            className="p-1.5 rounded-lg text-transparent group-hover:text-[#555760]
+                                 hover:!text-[#e8e8ea] hover:bg-white/[0.06] transition-all"
+                          >
+                            <FolderX size={13} />
+                          </button>
+                          <ChevronRight
+                            size={14}
+                            className="text-[#555760] opacity-0 group-hover:opacity-100 transition-opacity"
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Empty state */}
+            {recentRepos.length === 0 && (
+              <div className="flex flex-col items-center gap-3 py-12 text-center">
+                <div
+                  className="w-14 h-14 bg-white/[0.04] border border-white/[0.07] rounded-2xl
+                            flex items-center justify-center"
+                >
+                  <FolderOpen size={22} className="text-[#555760]" />
+                </div>
+                <p className="text-[12.5px] text-[#555760]">
+                  No recent repositories. Browse to open one.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

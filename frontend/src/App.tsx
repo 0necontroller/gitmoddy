@@ -1,10 +1,10 @@
 import { AppProvider } from './context/AppContext';
-import AppShell from './AppShell';
+import AppRoutes from './routes';
 
 export default function App() {
   return (
     <AppProvider>
-      <AppShell />
+      <AppRoutes />
     </AppProvider>
   );
 }

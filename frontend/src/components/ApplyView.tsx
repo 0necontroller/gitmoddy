@@ -3,7 +3,7 @@ import {
   AlertTriangle, ArrowLeft, CheckCircle2, Copy, Check, Terminal,
 } from 'lucide-react';
 import ChangeCard from './ChangeCard';
-import AppButton from './AppButton';
+import Button from './ui/button';
 import { useAppContext } from '../context/AppContext';
 
 // RewriteHistory is the existing binding — already present in generated JS
@@ -93,9 +93,9 @@ export default function ApplyView() {
           </p>
         </div>
 
-        <AppButton variant="ghost" onClick={handleComplete}>
+        <Button variant="ghost" onClick={handleComplete}>
           Start Over
-        </AppButton>
+        </Button>
       </div>
     );
   }
@@ -154,14 +154,14 @@ export default function ApplyView() {
           )}
 
           <div className="mt-4 pt-4 border-t border-amber-500/20 flex justify-end">
-            <AppButton
+            <Button
               variant="danger"
               onClick={handleApply}
               loading={isApplying}
               icon={<AlertTriangle size={14} />}
             >
               {isApplying ? 'Rewriting History…' : 'Complete Rewrite'}
-            </AppButton>
+            </Button>
           </div>
         </div>
 
