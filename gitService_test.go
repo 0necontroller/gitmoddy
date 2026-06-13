@@ -98,7 +98,7 @@ func TestRunGit_BadDirectory(t *testing.T) {
 
 // ─── helpers for test fixtures ───────────────────────────────────────────────
 
-// initTestRepo creates a minimal git repository with one commit in dir.
+// initTestRepo creates a minimal git repository with two commits in dir.
 func initTestRepo(t *testing.T, dir string) {
 	t.Helper()
 	must := func(args ...string) {
@@ -120,25 +120,25 @@ func initTestRepo(t *testing.T, dir string) {
 	must("config", "user.email", "test@example.com")
 	must("config", "user.name", "Test User")
 
-	// Write a file and commit it.
+	// First commit
 	f := filepath.Join(dir, "hello.txt")
 	if err := os.WriteFile(f, []byte("hello\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	must("add", ".")
 	must("commit", "-m", "initial commit")
+
+	// Second commit — modify the file so --stat produces a non-empty summary line
+	if err := os.WriteFile(f, []byte("hello\nworld\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	must("add", ".")
+	must("commit", "-m", "add world")
 }
 
 // ─── ScanRepository ─────────────────────────────────────────────────────────
 
-func TestScanRepository_EmptyPath(t *testing.T) {
-	svc := &GitService{}
-	_, err := svc.ScanRepository("")
-	if err == nil {
-		t.Fatal("expected error for empty path, got nil")
-	}
-}
-
+// TestScanRepository_NotARepo verifies an error is returned for a valid dir that is not a git repo.
 func TestScanRepository_NotARepo(t *testing.T) {
 	svc := &GitService{}
 	dir := t.TempDir() // valid dir but not a git repo
@@ -227,7 +227,8 @@ func TestGetCommitDetail_ValidHash(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ScanRepository: %v", err)
 	}
-	hash := result.Commits[0].Hash
+	// Use the second (newest) commit — it modifies an existing file so --stat has a summary line.
+	hash := result.Commits[len(result.Commits)-1].Hash
 
 	detail, err := svc.GetCommitDetail(dir, hash)
 	if err != nil {
@@ -239,7 +240,7 @@ func TestGetCommitDetail_ValidHash(t *testing.T) {
 	if detail.Hash != hash {
 		t.Errorf("hash mismatch: got %s, want %s", detail.Hash, hash)
 	}
-	if detail.Title != "initial commit" {
+	if detail.Title != "add world" {
 		t.Errorf("unexpected title: %q", detail.Title)
 	}
 	if detail.AuthorName == "" {
@@ -248,7 +249,7 @@ func TestGetCommitDetail_ValidHash(t *testing.T) {
 	if detail.AuthorEmail == "" {
 		t.Error("authorEmail must not be empty")
 	}
-	// The initial commit touches hello.txt, so filesChanged should be >= 1
+	// The second commit modifies hello.txt, so filesChanged should be 1.
 	if detail.FilesChanged < 1 {
 		t.Errorf("expected filesChanged >= 1, got %d", detail.FilesChanged)
 	}

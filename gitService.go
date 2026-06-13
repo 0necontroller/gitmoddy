@@ -180,8 +180,8 @@ func (g *GitService) GetCommitDetail(repoPath, hash string) (*CommitDetail, erro
 	// Get pure diff (no commit header) using diff-tree
 	diff, _ := runGit(repoPath, "diff-tree", "--no-commit-id", "-p", "--unified=3", hash)
 
-	// Parse stat summary
-	stat, _ := runGit(repoPath, "show", "--stat", "--no-patch", "--format=", hash)
+	// Parse stat summary using diff-tree (more reliable than `show --stat --no-patch`)
+	stat, _ := runGit(repoPath, "diff-tree", "--stat", "--no-commit-id", hash)
 	filesChanged, insertions, deletions := parseStatSummary(stat)
 
 	return &CommitDetail{
