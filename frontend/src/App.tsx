@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { SelectRepository, ScanRepository } from '../wailsjs/go/main/App';
 import { main } from '../wailsjs/go/models';
-import StepIndicator from './components/StepIndicator';
 import SelectRepositoryStep from './components/SelectRepositoryStep';
 import AuthorMappingStep from './components/AuthorMappingStep';
 import RewritePreviewStep from './components/RewritePreviewStep';
+import TopBar from './components/TopBar';
+import Sidebar from './components/Sidebar';
+import StepIndicator from './components/StepIndicator';
+import { Settings, Maximize2 } from 'lucide-react';
 
 export default function App() {
   const [step, setStep] = useState(1);
@@ -23,12 +26,12 @@ export default function App() {
       const path = await SelectRepository();
       if (!path) {
         setIsLoading(false);
-        return; // User canceled dialog
+        return;
       }
-      
+
       setRepoPath(path);
       const result = await ScanRepository(path);
-      
+
       setCommits(result.commits);
       setMailmap(result.mailmap);
       setStep(2);
@@ -40,56 +43,73 @@ export default function App() {
     }
   };
 
+  // Derive display values from repoPath
+  const repoName = repoPath ? repoPath.split('/').filter(Boolean).pop() ?? repoPath : '';
+
   return (
-    <div className="min-h-screen bg-[#0f1115] text-gray-100 flex flex-col font-sans selection:bg-blue-500/30">
-      <header className="flex items-center gap-3 p-6 border-b border-gray-800/50 bg-black/20 backdrop-blur-md">
-        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-          </svg>
-        </div>
-        <div>
-          <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-100 to-gray-400">
-            GitModdy
-          </h1>
-          <p className="text-xs text-gray-500">History Rewriter</p>
-        </div>
-      </header>
+    <div className="app-root">
+      {/* ── Top Header Bar ── */}
+      <TopBar repoName={repoName} />
 
-      <main className="flex-1 max-w-5xl w-full mx-auto p-6 flex flex-col">
-        <StepIndicator currentStep={step} />
+      {/* ── Body ── */}
+      <div className="app-body">
+        {/* ── Left Sidebar ── */}
+        <Sidebar step={step} repoPath={repoPath} />
 
-        <div className="flex-1 mt-4 relative">
-          {step === 1 && (
-            <SelectRepositoryStep 
-              onSelect={handleSelectRepository} 
-              repoPath={repoPath} 
-              error={error} 
-              isLoading={isLoading} 
-            />
-          )}
-          
-          {step === 2 && (
-            <AuthorMappingStep 
-              mailmap={mailmap}
-              setMailmap={setMailmap}
-              commits={commits}
-              setCommits={setCommits}
-              onNext={() => setStep(3)}
-              onBack={() => setStep(1)}
-            />
-          )}
+        {/* ── Right Main Panel ── */}
+        <main className="main-panel">
+          {/* Diff-file header bar */}
+          <div className="diff-header">
+            <div className="diff-header-left">
+              <svg className="diff-file-icon" width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path fillRule="evenodd" clipRule="evenodd"
+                  d="M3.75 1.5a.25.25 0 00-.25.25v12.5c0 .138.112.25.25.25h8.5a.25.25 0 00.25-.25V6H9.75A1.75 1.75 0 018 4.25V1.5H3.75zm5.75.56v2.19c0 .138.112.25.25.25h2.19L9.5 2.06zM2 1.75C2 .784 2.784 0 3.75 0h5.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0112.25 16h-8.5A1.75 1.75 0 012 14.25V1.75z"
+                  fill="currentColor" />
+              </svg>
+              <span className="diff-file-path">
+                {repoName ? repoName : 'gitmoddy'}
+              </span>
+            </div>
+            <div className="diff-header-right">
+              <Settings size={15} className="diff-header-icon" />
+              <Maximize2 size={15} className="diff-header-icon" />
+            </div>
+          </div>
 
-          {step === 3 && (
-            <RewritePreviewStep
-              repoPath={repoPath}
-              commits={commits}
-              mailmap={mailmap}
-              onBack={() => setStep(2)}
-            />
-          )}
-        </div>
-      </main>
+          {/* Step Content */}
+          <div className="step-content custom-scrollbar">
+            <StepIndicator currentStep={step} />
+            {step === 1 && (
+              <SelectRepositoryStep
+                onSelect={handleSelectRepository}
+                repoPath={repoPath}
+                error={error}
+                isLoading={isLoading}
+              />
+            )}
+
+            {step === 2 && (
+              <AuthorMappingStep
+                mailmap={mailmap}
+                setMailmap={setMailmap}
+                commits={commits}
+                setCommits={setCommits}
+                onNext={() => setStep(3)}
+                onBack={() => setStep(1)}
+              />
+            )}
+
+            {step === 3 && (
+              <RewritePreviewStep
+                repoPath={repoPath}
+                commits={commits}
+                mailmap={mailmap}
+                onBack={() => setStep(2)}
+              />
+            )}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

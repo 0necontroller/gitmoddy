@@ -81,7 +81,7 @@ export default function RewritePreviewStep({ repoPath, commits, mailmap, onBack 
   }
 
   return (
-    <div className="flex flex-col h-[65vh] animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500" style={{minHeight: '480px', height: 'calc(100vh - 280px)', maxHeight: '700px'}}>
       
       <div className="bg-gray-800/40 border border-gray-700/50 rounded-2xl p-6 flex flex-col h-full shadow-lg overflow-hidden backdrop-blur-sm">
         <h3 className="text-xl font-semibold mb-6 text-gray-100 flex items-center gap-3">

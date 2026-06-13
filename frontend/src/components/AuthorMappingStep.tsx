@@ -39,8 +39,8 @@ export default function AuthorMappingStep({ mailmap, setMailmap, commits, setCom
   };
 
   return (
-    <div className="flex flex-col space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-h-full">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[60vh]">
+    <div className="flex flex-col space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8" style={{minHeight: '480px', height: 'calc(100vh - 280px)', maxHeight: '700px'}}>
         
         {/* Identities Section */}
         <div className="bg-gray-800/40 border border-gray-700/50 rounded-2xl p-6 flex flex-col h-full shadow-lg overflow-hidden backdrop-blur-sm">
