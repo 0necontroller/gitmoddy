@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
-import { SelectRepository, ScanRepository } from '../../bindings/changeme/gitservice';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { SelectRepository, ScanRepository, CheckFilterRepo } from '../../bindings/changeme/gitservice';
 import { Identity, Commit, PendingChange, AppView } from '../types';
 
 // ── Recent repos persistence ──────────────────────────────────────────────────
@@ -33,6 +33,7 @@ export interface AppContextValue {
   selectedCommitIdx: number;
   pendingChanges: Map<string, PendingChange>;
   synced: boolean;
+  filterRepoInstalled: boolean | null;
 
   // Navigation
   setView: (v: AppView) => void;
@@ -51,6 +52,7 @@ export interface AppContextValue {
 
   // Lifecycle
   handleComplete: () => void;
+  checkFilterRepoInstalled: () => Promise<void>;
 }
 
 // ── Context + hook ────────────────────────────────────────────────────────────
@@ -77,6 +79,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [selectedCommitIdx, setSelectedCommitIdx] = useState(0);
   const [pendingChanges, setPendingChanges] = useState<Map<string, PendingChange>>(new Map());
   const [synced, setSynced] = useState(false);
+  const [filterRepoInstalled, setFilterRepoInstalled] = useState<boolean | null>(null);
+
+  const checkFilterRepoInstalled = async () => {
+    try {
+      const installed = await CheckFilterRepo();
+      setFilterRepoInstalled(installed);
+    } catch {
+      setFilterRepoInstalled(false);
+    }
+  };
+
+  useEffect(() => {
+    checkFilterRepoInstalled();
+  }, []);
 
   const repoName = repoPath
     ? (repoPath.split('/').filter(Boolean).pop() ?? repoPath)
@@ -206,6 +222,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     selectedCommitIdx,
     pendingChanges,
     synced,
+    filterRepoInstalled,
     setView,
     setSynced,
     openRepo,
@@ -216,6 +233,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     handleCommitEdit,
     handleAddContributor,
     handleComplete,
+    checkFilterRepoInstalled,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

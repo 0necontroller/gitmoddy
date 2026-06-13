@@ -254,3 +254,9 @@ func TestGetCommitDetail_ValidHash(t *testing.T) {
 		t.Errorf("expected filesChanged >= 1, got %d", detail.FilesChanged)
 	}
 }
+
+func TestCheckFilterRepo(t *testing.T) {
+	svc := &GitService{}
+	// Verify that CheckFilterRepo runs and returns a boolean value
+	_ = svc.CheckFilterRepo()
+}

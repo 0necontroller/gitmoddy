@@ -282,5 +282,11 @@ func (g *GitService) RewriteHistory(repoPath string, overrides map[string]Identi
 	return nil
 }
 
+// CheckFilterRepo checks if git-filter-repo is installed on the user's system.
+func (g *GitService) CheckFilterRepo() bool {
+	_, err := exec.Command("git", "filter-repo", "--version").Output()
+	return err == nil
+}
+
 // Ensure strconv is used (suppress unused import if needed)
 var _ = strconv.Itoa
