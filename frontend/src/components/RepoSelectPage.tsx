@@ -27,8 +27,8 @@ export default function RepoSelectPage({
       {/* Page header */}
       <div className="px-10 pt-12 pb-8 border-b border-white/[0.05] shrink-0">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-9 h-9 bg-[#4b8ef0]/15 border border-[#4b8ef0]/25 rounded-xl flex items-center justify-center">
-            <GitBranch size={17} className="text-[#4b8ef0]" />
+          <div className="w-9 h-9 bg-[#ec4f31]/15 border border-[#ec4f31]/25 rounded-xl flex items-center justify-center">
+            <GitBranch size={17} className="text-[#ec4f31]" />
           </div>
           <h1 className="text-[22px] font-bold text-[#e8e8ea] tracking-tight">Select Repository</h1>
         </div>
@@ -79,10 +79,10 @@ export default function RepoSelectPage({
                              px-4 py-3.5 cursor-pointer transition-all duration-150"
                 >
                   {/* Folder icon */}
-                  <div className="w-9 h-9 bg-[#4b8ef0]/10 border border-[#4b8ef0]/20 rounded-lg
+                  <div className="w-9 h-9 bg-[#ec4f31]/10 border border-[#ec4f31]/20 rounded-lg
                                   flex items-center justify-center shrink-0 transition-colors
-                                  group-hover:bg-[#4b8ef0]/15 group-hover:border-[#4b8ef0]/30">
-                    <FolderOpen size={15} className="text-[#4b8ef0]" />
+                                  group-hover:bg-[#ec4f31]/15 group-hover:border-[#ec4f31]/30">
+                    <FolderOpen size={15} className="text-[#ec4f31]" />
                   </div>
 
                   {/* Repo info */}

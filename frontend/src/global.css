@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
 
 @theme {
   --font-sans:
@@ -29,7 +28,7 @@
   left: 12%;
   right: 12%;
   height: 2px;
-  background: var(--color-accent, #4b8ef0);
+  background: #ec4f31;
   border-radius: 2px 2px 0 0;
 }
 

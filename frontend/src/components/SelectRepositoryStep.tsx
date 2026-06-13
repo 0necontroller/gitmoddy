@@ -11,7 +11,7 @@ export default function SelectRepositoryStep({ onSelect, repoPath, error, isLoad
   return (
     <div className="flex flex-col items-center justify-center p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="text-center space-y-3 max-w-lg">
-        <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-500">
+        <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#ec4f31] to-[#ff7357]">
           Target Repository
         </h2>
         <p className="text-gray-400 leading-relaxed">
@@ -22,7 +22,7 @@ export default function SelectRepositoryStep({ onSelect, repoPath, error, isLoad
       <button
         onClick={onSelect}
         disabled={isLoading}
-        className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-blue-600 rounded-xl hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
+        className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-[#ec4f31] rounded-xl hover:bg-[#d43d20] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ec4f31] focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
       >
         <span className="absolute inset-0 w-full h-full -mt-1 rounded-lg opacity-30 bg-gradient-to-b from-transparent via-transparent to-black"></span>
         <span className="relative flex items-center gap-2">
