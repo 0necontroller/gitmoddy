@@ -1,25 +1,35 @@
-import { ChevronRight, GitBranch, Download } from "lucide-react";
+import { useState } from "react";
+import { ChevronRight, ChevronDown, GitBranch, RefreshCw } from "lucide-react";
+import logoImage from "../assets/images/logo.png";
 
 interface TopBarProps {
   repoName: string;
-  branchName?: string;
-  fetchStatus?: string;
+  repoLoaded: boolean;
+  synced: boolean;
+  onRepoClick: () => void;
+  onSync: () => void;
 }
 
 export default function TopBar({
   repoName,
-  branchName = "—",
-  fetchStatus = "Never fetched",
+  repoLoaded,
+  synced,
+  onRepoClick,
+  onSync,
 }: TopBarProps) {
-  return (
-    // Full-width header, 52px tall, dark header bg, bottom border, flex row, macOS drag
-    <header className="drag-region flex pl-24 items-stretch h-[52px] bg-header border-b border-white/8 shrink-0">
-      {/* Divider */}
-      <div className="w-px bg-white/8 self-stretch my-2" />
+  const [branchOpen, setBranchOpen] = useState(false);
 
-      {/* Panel 1: Current Repository */}
-      <div className="no-drag-region flex items-center gap-[9px] px-5 min-w-0 cursor-pointer transition-colors hover:bg-white/4.5">
-        <span className="text-text-muted flex items-center shrink-0">
+  return (
+    <header className="drag-region relative flex pl-24 items-stretch h-[52px] bg-[#2a2b2f] border-b border-white/[0.08] shrink-0">
+      {/* Divider */}
+      <div className="w-px bg-white/[0.08] self-stretch my-2" />
+
+      {/* ── Panel 1: Current Repository ── */}
+      <div
+        className="no-drag-region flex items-center gap-[9px] px-5 min-w-0 cursor-pointer transition-colors hover:bg-white/[0.045]"
+        onClick={onRepoClick}
+      >
+        <span className="text-[#888a91] flex items-center shrink-0">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
             <path
               fillRule="evenodd"
@@ -29,49 +39,118 @@ export default function TopBar({
           </svg>
         </span>
         <div className="flex flex-col gap-px min-w-0">
-          <span className="text-[10px] text-text-muted whitespace-nowrap">
+          <span className="text-[10px] text-[#888a91] whitespace-nowrap">
             Current Repository
           </span>
-          <span className="text-[13px] font-semibold text-text-primary whitespace-nowrap overflow-hidden text-ellipsis">
+          <span className="text-[13px] font-semibold text-[#e8e8ea] whitespace-nowrap overflow-hidden text-ellipsis">
             {repoName || "—"}
           </span>
         </div>
-        <ChevronRight size={14} className="text-text-dim shrink-0 ml-auto" />
+        <ChevronRight size={14} className="text-[#555760] shrink-0 ml-auto" />
       </div>
 
-      {/* Divider */}
-      <div className="w-px bg-white/8 self-stretch my-2" />
+      {/* ── Branch + Sync panels (only when a repo is open) ── */}
+      {repoLoaded && (
+        <>
+          {/* Divider */}
+          <div className="w-px bg-white/[0.08] self-stretch my-2" />
 
-      {/* Panel 2: Current Branch */}
-      <div className="no-drag-region flex items-center gap-[9px] px-5 min-w-0 cursor-pointer transition-colors hover:bg-white/4.5">
-        <GitBranch size={15} className="text-text-muted shrink-0" />
-        <div className="flex flex-col gap-px min-w-0">
-          <span className="text-[10px] text-text-muted whitespace-nowrap">
-            Current Branch
-          </span>
-          <span className="text-[13px] font-semibold text-text-primary whitespace-nowrap overflow-hidden text-ellipsis">
-            {branchName}
-          </span>
-        </div>
-        <ChevronRight size={14} className="text-text-dim shrink-0 ml-auto" />
-      </div>
+          {/* ── Panel 2: Current Branch ── */}
+          <div
+            className="no-drag-region relative flex items-center gap-[9px] px-5 min-w-0 cursor-pointer transition-colors hover:bg-white/[0.045]"
+            onClick={() => setBranchOpen((o) => !o)}
+          >
+            <GitBranch size={15} className="text-[#888a91] shrink-0" />
+            <div className="flex flex-col gap-px min-w-0">
+              <span className="text-[10px] text-[#888a91] whitespace-nowrap">
+                Current Branch
+              </span>
+              <span className="text-[13px] font-semibold text-[#e8e8ea] whitespace-nowrap">
+                main
+              </span>
+            </div>
+            {branchOpen ? (
+              <ChevronDown
+                size={14}
+                className="text-[#555760] shrink-0 ml-auto"
+              />
+            ) : (
+              <ChevronRight
+                size={14}
+                className="text-[#555760] shrink-0 ml-auto"
+              />
+            )}
 
-      {/* Divider */}
-      <div className="w-px bg-white/8 self-stretch my-2" />
+            {/* Branch dropdown */}
+            {branchOpen && (
+              <div
+                className="absolute top-full left-0 mt-px w-52 bg-[#2a2b2f] border border-white/[0.12]
+                           rounded-xl shadow-2xl shadow-black/50 z-50 py-1.5 overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <p className="px-3 pt-1 pb-1.5 text-[9.5px] font-semibold text-[#555760] uppercase tracking-widest">
+                  Branches
+                </p>
+                {/* main — selectable */}
+                <button
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-[12.5px] font-medium
+                             text-[#4b8ef0] hover:bg-white/[0.06] transition-colors text-left"
+                  onClick={() => setBranchOpen(false)}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#4b8ef0] shrink-0" />
+                  main
+                  <span className="ml-auto text-[9.5px] bg-[#4b8ef0]/15 border border-[#4b8ef0]/30 px-1.5 py-0.5 rounded-full">
+                    current
+                  </span>
+                </button>
+                <div className="h-px bg-white/[0.06] my-1" />
+                <p className="px-3 py-1.5 text-[11px] text-[#555760] italic">
+                  Other branches are read-only in GitModdy
+                </p>
+              </div>
+            )}
+          </div>
 
-      {/* Panel 3: Pull Origin */}
-      <div className="no-drag-region flex flex-1 items-center gap-[9px] px-5 min-w-0 cursor-pointer transition-colors hover:bg-white/4.5">
-        <Download size={15} className="text-text-muted shrink-0" />
-        <div className="flex flex-col gap-px min-w-0">
-          <span className="text-[10px] text-text-muted whitespace-nowrap">
-            Pull origin
-          </span>
-          <span className="text-[13px] font-normal text-text-muted whitespace-nowrap overflow-hidden text-ellipsis">
-            {fetchStatus}
-          </span>
-        </div>
-        <ChevronRight size={14} className="text-text-dim shrink-0 ml-auto" />
-      </div>
+          {/* Divider */}
+          <div className="w-px bg-white/[0.08] self-stretch my-2" />
+
+          {/* ── Panel 3: Sync with origin ── */}
+          <div
+            className="no-drag-region flex flex-1 items-center gap-[9px] px-5 min-w-0 cursor-pointer transition-colors hover:bg-white/[0.045]"
+            onClick={onSync}
+          >
+            <RefreshCw
+              size={15}
+              className={`shrink-0 transition-colors ${synced ? "text-[#56d364]" : "text-[#888a91]"}`}
+            />
+            <div className="flex flex-col gap-px min-w-0">
+              <span className="text-[10px] text-[#888a91] whitespace-nowrap">
+                Sync with origin
+              </span>
+              <span
+                className={`text-[13px] whitespace-nowrap overflow-hidden text-ellipsis transition-colors ${
+                  synced
+                    ? "text-[#56d364] font-medium"
+                    : "text-[#888a91] font-normal"
+                }`}
+              >
+                {synced ? "Latest from main" : "Never synced"}
+              </span>
+            </div>
+            <ChevronRight
+              size={14}
+              className="text-[#555760] shrink-0 ml-auto"
+            />
+          </div>
+
+          {/* Divider */}
+          <div className="w-px bg-white/[0.08] self-stretch my-2" />
+
+          <div className="flex items-center justify-center px-4">
+            <img src={logoImage} alt="Git moddy logo" className="w-8 h-8" />
+          </div>
+        </>
+      )}
     </header>
   );
 }

@@ -1,123 +1,411 @@
 import { useState } from 'react';
-import { ChevronRight, GitBranch } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import { Commit, Identity, PendingChange } from '../types';
+import AppButton from './AppButton';
 
-interface SidebarFile {
-  path: string;
-  checked: boolean;
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function relativeTime(dateStr: string): string {
+  if (!dateStr) return '';
+  try {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const m = Math.floor(diff / 60_000);
+    const h = Math.floor(diff / 3_600_000);
+    const d = Math.floor(diff / 86_400_000);
+    if (m < 1) return 'just now';
+    if (m < 60) return `${m}m ago`;
+    if (h < 24) return `${h}h ago`;
+    if (d < 30) return `${d}d ago`;
+    return new Date(dateStr).toLocaleDateString();
+  } catch {
+    return '';
+  }
 }
 
-interface SidebarProps {
-  step: number;
-  repoPath: string;
-  files?: SidebarFile[];
-  commitTitle?: string;
+const AVATAR_COLORS = [
+  'bg-blue-500', 'bg-purple-500', 'bg-emerald-500',
+  'bg-amber-500', 'bg-rose-500', 'bg-cyan-500', 'bg-indigo-500',
+];
+
+function avatarColor(name: string) {
+  return AVATAR_COLORS[(name.charCodeAt(0) || 0) % AVATAR_COLORS.length];
 }
 
-const DEMO_FILES: SidebarFile[] = [];
+function initials(name: string) {
+  return (
+    name
+      .split(' ')
+      .filter(Boolean)
+      .map((p) => p[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2) || '?'
+  );
+}
 
-export default function Sidebar({ step, repoPath, files = DEMO_FILES, commitTitle = '' }: SidebarProps) {
-  const [activeTab, setActiveTab] = useState<'changes' | 'history'>('changes');
-  const [description, setDescription] = useState('');
+// ── Avatar component ─────────────────────────────────────────────────────────
+function Avatar({
+  name,
+  size = 'sm',
+}: {
+  name: string;
+  size?: 'sm' | 'md';
+}) {
+  const sz = size === 'sm' ? 'w-[18px] h-[18px] text-[7.5px]' : 'w-7 h-7 text-[10px]';
+  return (
+    <div
+      className={`${sz} ${avatarColor(name)} rounded-full flex items-center justify-center
+                  font-bold text-white shrink-0 select-none`}
+    >
+      {initials(name)}
+    </div>
+  );
+}
 
-  const displayFiles = files.length > 0 ? files : [];
-  const fileCount = displayFiles.length;
+// ── Commit popover (renders fixed, to the right of the sidebar) ───────────────
+interface PopoverData {
+  commit: Commit;
+  top: number;
+}
+
+function CommitPopover({
+  data,
+  mailmap,
+}: {
+  data: PopoverData;
+  mailmap: Record<number, Identity>;
+}) {
+  const { commit, top } = data;
+  const author = mailmap[commit.committer] ?? commit.originalAuthor;
 
   return (
-    // sidebar: 260px wide, dark bg, right border, flex column
-    <aside className="w-[260px] shrink-0 bg-[#252629] border-r border-white/[0.08] flex flex-col overflow-hidden">
-
-      {/* ── Tab Bar ── */}
-      <div className="flex shrink-0 border-b border-white/[0.08]">
-        {(['changes', 'history'] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={[
-              'relative flex-1 py-2.5 text-[13px] font-medium cursor-pointer transition-colors duration-150',
-              'capitalize bg-transparent border-0',
-              activeTab === tab
-                ? 'text-[#e8e8ea] sidebar-tab-active'
-                : 'text-[#888a91] hover:text-[#e8e8ea]',
-            ].join(' ')}
-          >
-            {tab === 'changes' ? 'Changes' : 'History'}
-          </button>
-        ))}
+    <div
+      style={{ position: 'fixed', top: Math.max(8, top), left: 268 }}
+      className="z-50 w-[300px] bg-[#2a2b2f] border border-white/[0.12] rounded-xl
+                 shadow-2xl shadow-black/60 p-4 pointer-events-none"
+    >
+      {/* Author row */}
+      <div className="flex items-center gap-2.5 mb-3">
+        <Avatar name={author.name} size="md" />
+        <div className="min-w-0">
+          <p className="text-[13px] font-semibold text-[#e8e8ea] leading-tight truncate">
+            {author.name}
+          </p>
+          <p className="text-[11px] text-[#555760] truncate">{author.email}</p>
+        </div>
       </div>
 
-      {/* ── File List Section ── */}
-      <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
-        {/* Section header */}
-        <div className="shrink-0 px-3.5 pt-2 pb-1.5 text-[11px] font-medium text-[#888a91]">
-          {fileCount > 0 ? `${fileCount} changed file${fileCount !== 1 ? 's' : ''}` : 'No changed files'}
+      {/* Commit title */}
+      <p className="text-[12px] text-[#e8e8ea] font-medium leading-snug mb-2">
+        {commit.title}
+      </p>
+
+      {/* Meta */}
+      <div className="flex items-center gap-2 text-[10.5px] text-[#555760]">
+        <span className="font-mono text-[#4b8ef0]">{commit.hash.slice(0, 7)}</span>
+        {commit.date && (
+          <>
+            <span>·</span>
+            <span>{new Date(commit.date).toLocaleString()}</span>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Main Sidebar component ────────────────────────────────────────────────────
+interface SidebarProps {
+  repoLoaded: boolean;
+  commits: Commit[]; // oldest → newest (backend order)
+  mailmap: Record<number, Identity>;
+  selectedHash: string | null;
+  pendingChanges: Map<string, PendingChange>;
+  onSelectCommit: (commit: Commit, idx: number) => void;
+  onDryRun: () => void;
+  onApply: () => void;
+  onAddContributor: (identity: Identity) => void;
+}
+
+export default function Sidebar({
+  repoLoaded,
+  commits,
+  mailmap,
+  selectedHash,
+  pendingChanges,
+  onSelectCommit,
+  onDryRun,
+  onApply,
+  onAddContributor,
+}: SidebarProps) {
+  const [activeTab, setActiveTab] = useState<'changes' | 'contributors'>('changes');
+  const [popover, setPopover] = useState<PopoverData | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+
+  // Display newest first
+  const displayCommits = [...commits].reverse();
+
+  const changeCount = pendingChanges.size;
+
+  // Commit counts per contributor
+  const commitCounts = commits.reduce<Record<string, number>>((acc, c) => {
+    const key = `${c.originalAuthor.name}|${c.originalAuthor.email}`;
+    acc[key] = (acc[key] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  const contributors = Object.entries(mailmap).map(([slot, id]) => ({
+    slot: Number(slot),
+    id,
+    count: commitCounts[`${id.name}|${id.email}`] ?? 0,
+  }));
+
+  const handleAddContributor = () => {
+    if (newName.trim() && newEmail.trim()) {
+      onAddContributor({ name: newName.trim(), email: newEmail.trim() });
+      setNewName('');
+      setNewEmail('');
+      setShowAddForm(false);
+    }
+  };
+
+  return (
+    <>
+      <aside className="w-[260px] shrink-0 bg-[#252629] border-r border-white/[0.08] flex flex-col overflow-hidden">
+        {/* ── Tab Bar ── */}
+        <div className="flex shrink-0 border-b border-white/[0.08]">
+          {(['changes', 'contributors'] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={[
+                'relative flex-1 py-2.5 text-[12.5px] font-medium cursor-pointer',
+                'transition-colors duration-150 bg-transparent border-0 capitalize',
+                activeTab === tab
+                  ? 'text-[#e8e8ea] sidebar-tab-active'
+                  : 'text-[#888a91] hover:text-[#e8e8ea]',
+              ].join(' ')}
+            >
+              {tab === 'changes' ? 'Changes' : 'Contributors'}
+            </button>
+          ))}
         </div>
 
-        {/* File items */}
-        <div className="flex-1 overflow-y-auto py-0.5 custom-scrollbar">
-          {displayFiles.map((file, i) => {
-            const parts = file.path.split('/');
-            const name = parts.pop() ?? file.path;
-            const dir = parts.join('/') + (parts.length ? '/' : '');
-            return (
-              <div
-                key={i}
-                className="flex items-center gap-2 px-3.5 py-[5px] cursor-pointer transition-colors duration-100 hover:bg-white/[0.045]"
-              >
-                <input
-                  type="checkbox"
-                  defaultChecked={file.checked}
-                  className="w-3.5 h-3.5 shrink-0 cursor-pointer accent-[#4b8ef0]"
-                />
-                <span className="flex-1 font-mono text-[11.5px] overflow-hidden text-ellipsis whitespace-nowrap">
-                  <span className="text-[#555760]">{dir}</span>
-                  <span className="text-[#e8e8ea]">{name}</span>
-                </span>
-                {/* Gold "M" badge */}
-                <span className="shrink-0 text-[10px] font-semibold text-[#c9a227] border border-[#c9a227] w-4 h-4 flex items-center justify-center rounded-[3px]">
-                  M
-                </span>
-              </div>
-            );
-          })}
+        {/* ── Content area ── */}
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+          {activeTab === 'changes' ? (
+            /* ── Commit Tree ── */
+            <div className="flex-1 overflow-y-auto custom-scrollbar py-2">
+              {!repoLoaded ? (
+                <p className="px-4 py-5 text-[11.5px] text-[#555760] leading-relaxed">
+                  Select a repository to view its commit history.
+                </p>
+              ) : displayCommits.length === 0 ? (
+                <p className="px-4 py-5 text-[11.5px] text-[#555760]">No commits found.</p>
+              ) : (
+                <div className="relative">
+                  {/* Graph backbone line */}
+                  <div className="absolute left-[28px] top-5 bottom-5 w-[2px] bg-[#4b8ef0]/25 rounded-full" />
 
-          {displayFiles.length === 0 && step === 1 && (
-            <p className="px-3.5 py-4 text-[11.5px] text-[#555760] leading-relaxed">
-              Select a repository to see changed files
-            </p>
+                  {displayCommits.map((commit, displayIdx) => {
+                    // displayIdx 0 = newest; original idx = commits.length - 1 - displayIdx
+                    const originalIdx = commits.length - 1 - displayIdx;
+                    const isHead = displayIdx === 0;
+                    const isSelected = commit.hash === selectedHash;
+                    const hasPending = pendingChanges.has(commit.hash);
+                    const author = mailmap[commit.committer] ?? commit.originalAuthor;
+
+                    return (
+                      <div
+                        key={commit.hash}
+                        className="relative"
+                        onMouseEnter={(e) => {
+                          const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                          setPopover({ commit, top: rect.top });
+                        }}
+                        onMouseLeave={() => setPopover(null)}
+                      >
+                        <div
+                          onClick={() => onSelectCommit(commit, originalIdx)}
+                          className={[
+                            'flex items-start gap-3 pl-3 pr-2.5 py-2 cursor-pointer',
+                            'border-l-2 transition-all duration-100',
+                            isSelected
+                              ? 'bg-[#4b8ef0]/12 border-[#4b8ef0]'
+                              : 'border-transparent hover:bg-white/[0.035]',
+                          ].join(' ')}
+                        >
+                          {/* Graph node */}
+                          <div className="shrink-0 w-7 flex items-center justify-center mt-1.5">
+                            {isHead ? (
+                              /* HEAD: filled circle */
+                              <div className="w-3.5 h-3.5 rounded-full bg-[#4b8ef0] border-2 border-[#4b8ef0] shadow-[0_0_6px_#4b8ef0aa]" />
+                            ) : (
+                              /* Normal: hollow circle */
+                              <div
+                                className={[
+                                  'w-2.5 h-2.5 rounded-full border-2 transition-colors',
+                                  isSelected
+                                    ? 'bg-[#4b8ef0] border-[#4b8ef0]'
+                                    : 'bg-[#252629] border-[#4b8ef0]/60 hover:border-[#4b8ef0]',
+                                ].join(' ')}
+                              />
+                            )}
+                          </div>
+
+                          {/* Commit info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <p
+                                className={[
+                                  'text-[12px] truncate flex-1',
+                                  isSelected
+                                    ? 'text-[#e8e8ea] font-semibold'
+                                    : 'text-[#c8c9cc]',
+                                ].join(' ')}
+                              >
+                                {pendingChanges.get(commit.hash)?.newTitle ?? commit.title}
+                              </p>
+                              {isHead && (
+                                <span className="shrink-0 text-[8.5px] font-bold text-[#238636] bg-[#238636]/20 border border-[#238636]/35 px-1.5 py-0.5 rounded-full leading-none">
+                                  main
+                                </span>
+                              )}
+                              {hasPending && (
+                                <span
+                                  className="shrink-0 w-1.5 h-1.5 rounded-full bg-[#c9a227]"
+                                  title="Has pending changes"
+                                />
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1 text-[10.5px] text-[#555760]">
+                              <span className="truncate max-w-[100px]">{author.name}</span>
+                              <span className="text-[#3a3b3f]">·</span>
+                              <span className="whitespace-nowrap">
+                                {relativeTime(commit.date)}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Author avatar */}
+                          <Avatar name={author.name} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ) : (
+            /* ── Contributors Tab ── */
+            <div className="flex-1 overflow-y-auto custom-scrollbar py-2">
+              {contributors.map(({ id, count }) => (
+                <div
+                  key={`${id.name}|${id.email}`}
+                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.035] transition-colors"
+                >
+                  <Avatar name={id.name} size="md" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12.5px] font-medium text-[#e8e8ea] truncate">{id.name}</p>
+                    <p className="text-[10.5px] text-[#555760] truncate">{id.email}</p>
+                  </div>
+                  <span className="text-[10px] font-semibold text-[#555760] bg-white/[0.06] px-2 py-0.5 rounded-full shrink-0">
+                    {count}
+                  </span>
+                </div>
+              ))}
+
+              {/* Add contributor form / button */}
+              {showAddForm ? (
+                <div className="mx-3 mt-2 bg-[#1c1d20] border border-white/[0.09] rounded-xl p-3 space-y-2">
+                  <input
+                    type="text"
+                    placeholder="Name"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    className="w-full bg-transparent border border-white/[0.09] rounded-lg px-2.5 py-1.5
+                               text-[12px] text-[#e8e8ea] placeholder:text-[#555760]
+                               focus:outline-none focus:border-[#4b8ef0] transition-colors"
+                  />
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddContributor()}
+                    className="w-full bg-transparent border border-white/[0.09] rounded-lg px-2.5 py-1.5
+                               text-[12px] text-[#e8e8ea] placeholder:text-[#555760]
+                               focus:outline-none focus:border-[#4b8ef0] transition-colors"
+                  />
+                  <div className="flex gap-2">
+                    <AppButton
+                      variant="primary"
+                      size="sm"
+                      onClick={handleAddContributor}
+                      className="flex-1 !text-[11px]"
+                    >
+                      Add
+                    </AppButton>
+                    <AppButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowAddForm(false)}
+                      className="flex-1 !text-[11px]"
+                    >
+                      Cancel
+                    </AppButton>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowAddForm(true)}
+                  className="flex items-center gap-2 w-full px-4 py-2.5 text-[12px] text-[#555760]
+                             hover:text-[#888a91] hover:bg-white/[0.035] transition-all"
+                >
+                  <Plus size={13} />
+                  Add contributor
+                </button>
+              )}
+            </div>
           )}
         </div>
-      </div>
 
-      {/* ── Stashed Changes ── */}
-      <div className="shrink-0 border-t border-white/[0.08]">
-        <div className="flex items-center gap-2 px-3.5 py-2.5 cursor-pointer transition-colors duration-100 hover:bg-white/[0.045]">
-          <GitBranch size={13} className="text-[#888a91]" />
-          <span className="flex-1 text-[12.5px] text-[#888a91]">Stashed changes</span>
-          <ChevronRight size={13} className="text-[#555760]" />
+        {/* ── Bottom Footer: changes + actions ── */}
+        <div className="shrink-0 border-t border-white/[0.08] bg-[#1e1f22]">
+          {changeCount > 0 && (
+            <div className="px-4 py-2 border-b border-white/[0.05]">
+              <p className="text-[11px] font-semibold text-[#c9a227]">
+                {changeCount} commit{changeCount !== 1 ? 's' : ''} changed
+              </p>
+            </div>
+          )}
+          <div className="flex gap-2 p-2.5">
+            <AppButton
+              variant="ghost"
+              size="sm"
+              onClick={onDryRun}
+              disabled={changeCount === 0}
+              className="flex-1 !text-[11.5px]"
+            >
+              Dry Run
+            </AppButton>
+            <AppButton
+              variant="primary"
+              size="sm"
+              onClick={onApply}
+              disabled={changeCount === 0}
+              className="flex-1 !text-[11.5px]"
+            >
+              Apply
+            </AppButton>
+          </div>
         </div>
-      </div>
+      </aside>
 
-      {/* ── Commit Box ── */}
-      <div className="shrink-0 border-t border-white/[0.08] px-3 py-2.5 bg-[#252629]">
-        {commitTitle && (
-          <p className="text-[11.5px] text-[#888a91] mb-1.5 pl-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
-            {commitTitle}
-          </p>
-        )}
-        <div className="flex gap-2 items-start">
-          {/* Avatar placeholder */}
-          <div className="shrink-0 mt-0.5 w-[22px] h-[22px] rounded-full bg-[#555760] border border-white/[0.13]" />
-          <textarea
-            className="flex-1 bg-[#1c1d20] border border-white/[0.13] rounded-[6px] px-[9px] py-[7px]
-                       text-xs text-[#e8e8ea] font-[inherit] resize-none outline-none leading-[1.45]
-                       placeholder:text-[#555760] focus:border-[#4b8ef0] transition-colors duration-150"
-            placeholder="Description"
-            value={description}
-            onChange={e => setDescription(e.target.value)}
-            rows={3}
-          />
-        </div>
-      </div>
-    </aside>
+      {/* Hover popover — rendered outside the aside to escape overflow */}
+      {popover && <CommitPopover data={popover} mailmap={mailmap} />}
+    </>
   );
 }
