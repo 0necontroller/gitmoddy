@@ -4,6 +4,7 @@ import { Commit, Identity } from "../types";
 import AppButton from "./AppButton";
 import { cn } from "../lib/cn";
 import { useAppContext } from "../context/AppContext";
+import Avatar from "./Avatar";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -22,46 +23,6 @@ function relativeTime(dateStr: string): string {
   } catch {
     return "";
   }
-}
-
-const AVATAR_COLORS = [
-  "bg-blue-500",
-  "bg-purple-500",
-  "bg-emerald-500",
-  "bg-amber-500",
-  "bg-rose-500",
-  "bg-cyan-500",
-  "bg-indigo-500",
-];
-
-function avatarColor(name: string) {
-  return AVATAR_COLORS[(name.charCodeAt(0) || 0) % AVATAR_COLORS.length];
-}
-
-function initials(name: string) {
-  return (
-    name
-      .split(" ")
-      .filter(Boolean)
-      .map((p) => p[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2) || "?"
-  );
-}
-
-// ── Avatar component ─────────────────────────────────────────────────────────
-function Avatar({ name, size = "sm" }: { name: string; size?: "sm" | "md" }) {
-  const sz =
-    size === "sm" ? "w-[18px] h-[18px] text-[7.5px]" : "w-7 h-7 text-[10px]";
-  return (
-    <div
-      className={`${sz} ${avatarColor(name)} rounded-full flex items-center justify-center
-                  font-bold text-white shrink-0 select-none`}
-    >
-      {initials(name)}
-    </div>
-  );
 }
 
 // ── Commit popover (renders fixed, to the right of the sidebar) ───────────────
@@ -88,7 +49,7 @@ function CommitPopover({
     >
       {/* Author row */}
       <div className="flex items-center gap-2.5 mb-3">
-        <Avatar name={author.name} size="md" />
+        <Avatar seed={author.name} className="rounded-full" width={36} />
         <div className="min-w-0">
           <p className="text-[13px] font-semibold text-[#e8e8ea] leading-tight truncate">
             {author.name}
@@ -132,10 +93,12 @@ export default function Sidebar() {
   } = useAppContext();
 
   const selectedHash = selectedCommit?.hash ?? null;
-  const onSelectCommit = (commit: Commit, idx: number) => selectCommit(commit, idx);
-  const onDryRun = () => setView('dry-run');
-  const onApply = () => setView('apply');
-  const onAddContributor = (identity: Identity) => addContributorToContext(identity);
+  const onSelectCommit = (commit: Commit, idx: number) =>
+    selectCommit(commit, idx);
+  const onDryRun = () => setView("dry-run");
+  const onApply = () => setView("apply");
+  const onAddContributor = (identity: Identity) =>
+    addContributorToContext(identity);
 
   const [activeTab, setActiveTab] = useState<"changes" | "contributors">(
     "changes",
@@ -304,7 +267,11 @@ export default function Sidebar() {
                           </div>
 
                           {/* Author avatar */}
-                          <Avatar name={author.name} />
+                          <Avatar
+                            seed={author.name}
+                            width={28}
+                            className="rounded-full"
+                          />
                         </div>
                       </div>
                     );
@@ -320,7 +287,7 @@ export default function Sidebar() {
                   key={`${id.name}|${id.email}`}
                   className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.035] transition-colors"
                 >
-                  <Avatar name={id.name} size="md" />
+                  <Avatar seed={id.name} width={28} className="rounded-full" />
                   <div className="flex-1 min-w-0">
                     <p className="text-[12.5px] font-medium text-[#e8e8ea] truncate">
                       {id.name}
@@ -329,7 +296,7 @@ export default function Sidebar() {
                       {id.email}
                     </p>
                   </div>
-                  <span className="text-[10px] font-semibold text-[#555760] bg-white/[0.06] px-2 py-0.5 rounded-full shrink-0">
+                  <span className="text-[10px] font-semibold text-text-primary bg-white/[0.06] px-2 py-0.5 rounded-full shrink-0">
                     {count}
                   </span>
                 </div>
@@ -345,7 +312,7 @@ export default function Sidebar() {
                     onChange={(e) => setNewName(e.target.value)}
                     className="w-full bg-transparent border border-white/[0.09] rounded-lg px-2.5 py-1.5
                                text-[12px] text-[#e8e8ea] placeholder:text-[#555760]
-                               focus:outline-none focus:border-[#4b8ef0] transition-colors"
+                               focus:outline-none focus:border-[#ec4f31] transition-colors"
                   />
                   <input
                     type="email"
@@ -357,7 +324,7 @@ export default function Sidebar() {
                     }
                     className="w-full bg-transparent border border-white/[0.09] rounded-lg px-2.5 py-1.5
                                text-[12px] text-[#e8e8ea] placeholder:text-[#555760]
-                               focus:outline-none focus:border-[#4b8ef0] transition-colors"
+                               focus:outline-none focus:border-[#ec4f31] transition-colors"
                   />
                   <div className="flex gap-2">
                     <AppButton

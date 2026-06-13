@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@dicebear/core": "^10.2.0",
+    "@dicebear/styles": "^10.2.0",
     "@tailwindcss/vite": "^4.3.0",
     "@wailsio/runtime": "latest",
     "clsx": "^2.1.1",
