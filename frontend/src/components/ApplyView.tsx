@@ -2,34 +2,20 @@ import { useState } from 'react';
 import {
   AlertTriangle, ArrowLeft, CheckCircle2, Copy, Check, Terminal,
 } from 'lucide-react';
-import { Commit, Identity, PendingChange } from '../types';
 import ChangeCard from './ChangeCard';
 import AppButton from './AppButton';
+import { useAppContext } from '../context/AppContext';
 
 // RewriteHistory is the existing binding — already present in generated JS
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { RewriteHistory } from '../../bindings/changeme/gitservice';
 
-interface ApplyViewProps {
-  repoPath: string;
-  commits: Commit[];
-  mailmap: Record<number, Identity>;
-  pendingChanges: Map<string, PendingChange>;
-  onBack: () => void;
-  onComplete: () => void;
-}
-
 const PUSH_CMD = 'git push origin --force --all';
 
-export default function ApplyView({
-  repoPath,
-  commits,
-  mailmap,
-  pendingChanges,
-  onBack,
-  onComplete,
-}: ApplyViewProps) {
+export default function ApplyView() {
+  const { repoPath, commits, mailmap, pendingChanges, setView, handleComplete } = useAppContext();
+
   const [isApplying, setIsApplying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -45,11 +31,11 @@ export default function ApplyView({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleComplete = async () => {
+  const handleApply = async () => {
     setIsApplying(true);
     setError(null);
     try {
-      const overrides: Record<string, Identity> = {};
+      const overrides: Record<string, { name: string; email: string }> = {};
       for (const commit of changedCommits) {
         const change = pendingChanges.get(commit.hash)!;
         overrides[commit.hash] =
@@ -107,7 +93,7 @@ export default function ApplyView({
           </p>
         </div>
 
-        <AppButton variant="ghost" onClick={onComplete}>
+        <AppButton variant="ghost" onClick={handleComplete}>
           Start Over
         </AppButton>
       </div>
@@ -120,7 +106,7 @@ export default function ApplyView({
       {/* Header */}
       <div className="flex items-center gap-3 px-8 py-5 border-b border-white/[0.05] shrink-0">
         <button
-          onClick={onBack}
+          onClick={() => setView('dry-run')}
           disabled={isApplying}
           className="p-1.5 rounded-lg text-[#555760] hover:text-[#e8e8ea] hover:bg-white/[0.06]
                      transition-all shrink-0 disabled:opacity-40"
@@ -170,7 +156,7 @@ export default function ApplyView({
           <div className="mt-4 pt-4 border-t border-amber-500/20 flex justify-end">
             <AppButton
               variant="danger"
-              onClick={handleComplete}
+              onClick={handleApply}
               loading={isApplying}
               icon={<AlertTriangle size={14} />}
             >

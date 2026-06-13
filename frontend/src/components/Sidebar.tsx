@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
-import { Commit, Identity, PendingChange } from "../types";
+import { Commit, Identity } from "../types";
 import AppButton from "./AppButton";
 import { cn } from "../lib/cn";
+import { useAppContext } from "../context/AppContext";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -118,29 +119,24 @@ function CommitPopover({
 }
 
 // ── Main Sidebar component ────────────────────────────────────────────────────
-interface SidebarProps {
-  repoLoaded: boolean;
-  commits: Commit[]; // oldest → newest (backend order)
-  mailmap: Record<number, Identity>;
-  selectedHash: string | null;
-  pendingChanges: Map<string, PendingChange>;
-  onSelectCommit: (commit: Commit, idx: number) => void;
-  onDryRun: () => void;
-  onApply: () => void;
-  onAddContributor: (identity: Identity) => void;
-}
+export default function Sidebar() {
+  const {
+    repoLoaded,
+    commits,
+    mailmap,
+    selectedCommit,
+    pendingChanges,
+    selectCommit,
+    setView,
+    handleAddContributor: addContributorToContext,
+  } = useAppContext();
 
-export default function Sidebar({
-  repoLoaded,
-  commits,
-  mailmap,
-  selectedHash,
-  pendingChanges,
-  onSelectCommit,
-  onDryRun,
-  onApply,
-  onAddContributor,
-}: SidebarProps) {
+  const selectedHash = selectedCommit?.hash ?? null;
+  const onSelectCommit = (commit: Commit, idx: number) => selectCommit(commit, idx);
+  const onDryRun = () => setView('dry-run');
+  const onApply = () => setView('apply');
+  const onAddContributor = (identity: Identity) => addContributorToContext(identity);
+
   const [activeTab, setActiveTab] = useState<"changes" | "contributors">(
     "changes",
   );

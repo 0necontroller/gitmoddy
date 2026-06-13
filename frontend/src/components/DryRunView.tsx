@@ -1,23 +1,11 @@
 import { ArrowLeft, Eye } from 'lucide-react';
-import { Commit, Identity, PendingChange } from '../types';
 import ChangeCard from './ChangeCard';
 import AppButton from './AppButton';
+import { useAppContext } from '../context/AppContext';
 
-interface DryRunViewProps {
-  commits: Commit[];
-  mailmap: Record<number, Identity>;
-  pendingChanges: Map<string, PendingChange>;
-  onBack: () => void;
-  onProceedToApply: () => void;
-}
+export default function DryRunView() {
+  const { commits, mailmap, pendingChanges, setView } = useAppContext();
 
-export default function DryRunView({
-  commits,
-  mailmap,
-  pendingChanges,
-  onBack,
-  onProceedToApply,
-}: DryRunViewProps) {
   // Display newest first (match the sidebar tree order)
   const changedCommits = [...commits]
     .reverse()
@@ -28,7 +16,7 @@ export default function DryRunView({
       {/* ── Header ── */}
       <div className="flex items-center gap-3 px-8 py-5 border-b border-white/[0.05] shrink-0">
         <button
-          onClick={onBack}
+          onClick={() => setView('main')}
           className="p-1.5 rounded-lg text-[#555760] hover:text-[#e8e8ea] hover:bg-white/[0.06] transition-all shrink-0"
         >
           <ArrowLeft size={16} />
@@ -49,7 +37,7 @@ export default function DryRunView({
             variant="primary"
             size="sm"
             icon={<Eye size={13} />}
-            onClick={onProceedToApply}
+            onClick={() => setView('apply')}
             disabled={changedCommits.length === 0}
           >
             Proceed to Apply

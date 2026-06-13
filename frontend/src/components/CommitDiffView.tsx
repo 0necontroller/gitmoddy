@@ -1,25 +1,15 @@
 import { useState, useEffect } from 'react';
 import { GitCommit, Settings, Plus, Minus } from 'lucide-react';
-import { Commit, CommitDetail, Identity, PendingChange } from '../types';
+import { CommitDetail } from '../types';
 import AuthorSelect from './AuthorSelect';
 import CommitEditDialog from './CommitEditDialog';
+import { useAppContext } from '../context/AppContext';
 
 // The GetCommitDetail binding is added to gitService.go and will be available
 // after running `wails3 task generate:bindings`.
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore – populated after bindings regeneration
 import { GetCommitDetail } from '../../bindings/changeme/gitservice';
-
-interface CommitDiffViewProps {
-  commit: Commit;
-  commitIndex: number; // index in allCommits (oldest→newest)
-  allCommits: Commit[];
-  repoPath: string;
-  mailmap: Record<number, Identity>;
-  pendingChange?: PendingChange;
-  onAuthorChange: (slot: number) => void;
-  onCommitEdit: (change: PendingChange) => void;
-}
 
 // ─── Diff line renderer ────────────────────────────────────────────────────────
 function DiffLine({ line }: { line: string }) {
@@ -65,20 +55,26 @@ function DiffLine({ line }: { line: string }) {
   );
 }
 
-export default function CommitDiffView({
-  commit,
-  commitIndex,
-  allCommits,
-  repoPath,
-  mailmap,
-  pendingChange,
-  onAuthorChange,
-  onCommitEdit,
-}: CommitDiffViewProps) {
+export default function CommitDiffView() {
+  const {
+    selectedCommit: commit,
+    selectedCommitIdx: commitIndex,
+    commits: allCommits,
+    repoPath,
+    mailmap,
+    pendingChanges,
+    handleAuthorChange,
+    handleCommitEdit,
+  } = useAppContext();
+
   const [detail, setDetail] = useState<CommitDetail | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+
+  if (!commit) return null;
+
+  const pendingChange = pendingChanges.get(commit.hash);
 
   // Determine effective author slot
   const effectiveAuthorSlot = (() => {
@@ -93,6 +89,7 @@ export default function CommitDiffView({
 
   const displayTitle = pendingChange?.newTitle ?? commit.title;
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -133,7 +130,7 @@ export default function CommitDiffView({
           <AuthorSelect
             mailmap={mailmap}
             value={effectiveAuthorSlot}
-            onChange={onAuthorChange}
+            onChange={handleAuthorChange}
           />
           <button
             onClick={() => setEditOpen(true)}
@@ -151,7 +148,7 @@ export default function CommitDiffView({
 
         {loading && (
           <div className="flex items-center justify-center h-40 text-[#555760] text-[12px] gap-2">
-            <div className="w-4 h-4 border-2 border-[#555760] border-t-[#4b8ef0] rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-[#555760] border-t-[#ec4f31] rounded-full animate-spin" />
             Loading diff…
           </div>
         )}
@@ -220,7 +217,7 @@ export default function CommitDiffView({
           commitIndex={commitIndex}
           allCommits={allCommits}
           existing={pendingChange}
-          onSave={onCommitEdit}
+          onSave={handleCommitEdit}
           onClose={() => setEditOpen(false)}
         />
       )}

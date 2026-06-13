@@ -1,27 +1,14 @@
 import { Clock, FolderOpen, FolderX, ChevronRight, GitBranch } from 'lucide-react';
 import AppButton from './AppButton';
-
-interface RepoSelectPageProps {
-  recentRepos: string[];
-  isLoading: boolean;
-  error: string | null;
-  onBrowse: () => void;
-  onSelectRecent: (path: string) => void;
-  onRemoveRecent: (path: string) => void;
-}
+import { useAppContext } from '../context/AppContext';
 
 function getRepoName(path: string): string {
   return path.split('/').filter(Boolean).pop() ?? path;
 }
 
-export default function RepoSelectPage({
-  recentRepos,
-  isLoading,
-  error,
-  onBrowse,
-  onSelectRecent,
-  onRemoveRecent,
-}: RepoSelectPageProps) {
+export default function RepoSelectPage() {
+  const { recentRepos, isLoading, error, handleBrowse, openRepo, removeRecentRepo } = useAppContext();
+
   return (
     <div className="flex flex-col h-full bg-[#1a1b1e]">
       {/* Page header */}
@@ -46,7 +33,7 @@ export default function RepoSelectPage({
             variant="primary"
             size="lg"
             icon={<FolderOpen size={16} />}
-            onClick={onBrowse}
+            onClick={handleBrowse}
             loading={isLoading}
           >
             Browse for Repository
@@ -72,11 +59,11 @@ export default function RepoSelectPage({
             <div className="space-y-1.5">
               {recentRepos.map((path) => (
                 <div
-                  key={path}
-                  onClick={() => onSelectRecent(path)}
-                  className="group flex items-center gap-3.5 bg-[#252629] hover:bg-[#2c2d31]
-                             border border-white/[0.06] hover:border-white/[0.12] rounded-xl
-                             px-4 py-3.5 cursor-pointer transition-all duration-150"
+                   key={path}
+                   onClick={() => openRepo(path)}
+                   className="group flex items-center gap-3.5 bg-[#252629] hover:bg-[#2c2d31]
+                              border border-white/[0.06] hover:border-white/[0.12] rounded-xl
+                              px-4 py-3.5 cursor-pointer transition-all duration-150"
                 >
                   {/* Folder icon */}
                   <div className="w-9 h-9 bg-[#ec4f31]/10 border border-[#ec4f31]/20 rounded-lg
@@ -99,7 +86,7 @@ export default function RepoSelectPage({
                       title="Remove from recent"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onRemoveRecent(path);
+                        removeRecentRepo(path);
                       }}
                       className="p-1.5 rounded-lg text-transparent group-hover:text-[#555760]
                                  hover:!text-[#e8e8ea] hover:bg-white/[0.06] transition-all"

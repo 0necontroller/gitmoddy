@@ -1,22 +1,10 @@
 import { useState } from "react";
 import { ChevronRight, ChevronDown, GitBranch, RefreshCw } from "lucide-react";
 import logoImage from "../assets/images/logo.png";
+import { useAppContext } from "../context/AppContext";
 
-interface TopBarProps {
-  repoName: string;
-  repoLoaded: boolean;
-  synced: boolean;
-  onRepoClick: () => void;
-  onSync: () => void;
-}
-
-export default function TopBar({
-  repoName,
-  repoLoaded,
-  synced,
-  onRepoClick,
-  onSync,
-}: TopBarProps) {
+export default function TopBar() {
+  const { repoName, repoLoaded, synced, setView, setSynced } = useAppContext();
   const [branchOpen, setBranchOpen] = useState(false);
 
   return (
@@ -27,7 +15,7 @@ export default function TopBar({
       {/* ── Panel 1: Current Repository ── */}
       <div
         className="no-drag-region flex items-center gap-[9px] px-5 min-w-0 cursor-pointer transition-colors hover:bg-white/[0.045]"
-        onClick={onRepoClick}
+        onClick={() => setView('repo-select')}
       >
         <span className="text-[#888a91] flex items-center shrink-0">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -94,12 +82,12 @@ export default function TopBar({
                 {/* main — selectable */}
                 <button
                   className="w-full flex items-center gap-2.5 px-3 py-2 text-[12.5px] font-medium
-                             text-[#4b8ef0] hover:bg-white/[0.06] transition-colors text-left"
+                             text-[#ec4f31] hover:bg-white/[0.06] transition-colors text-left"
                   onClick={() => setBranchOpen(false)}
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#4b8ef0] shrink-0" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#ec4f31] shrink-0" />
                   main
-                  <span className="ml-auto text-[9.5px] bg-[#4b8ef0]/15 border border-[#4b8ef0]/30 px-1.5 py-0.5 rounded-full">
+                  <span className="ml-auto text-[9.5px] bg-[#ec4f31]/15 border border-[#ec4f31]/30 px-1.5 py-0.5 rounded-full">
                     current
                   </span>
                 </button>
@@ -117,7 +105,7 @@ export default function TopBar({
           {/* ── Panel 3: Sync with origin ── */}
           <div
             className="no-drag-region flex flex-1 items-center gap-[9px] px-5 min-w-0 cursor-pointer transition-colors hover:bg-white/[0.045]"
-            onClick={onSync}
+            onClick={() => setSynced(true)}
           >
             <RefreshCw
               size={15}
