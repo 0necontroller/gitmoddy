@@ -1,12 +1,12 @@
 import { useState, useMemo } from 'react';
-import { main } from '../../wailsjs/go/models';
-import { RewriteHistory } from '../../wailsjs/go/main/App';
+import { Identity, Commit } from '../../bindings/changeme/models';
+import { RewriteHistory } from '../../bindings/changeme/gitservice';
 import { AlertTriangle, CheckCircle2, ArrowRight } from 'lucide-react';
 
 interface RewritePreviewStepProps {
   repoPath: string;
-  commits: main.Commit[];
-  mailmap: Record<number, main.Identity>;
+  commits: Commit[];
+  mailmap: Record<number, Identity>;
   onBack: () => void;
 }
 
@@ -34,8 +34,8 @@ export default function RewritePreviewStep({ repoPath, commits, mailmap, onBack 
     setError(null);
 
     try {
-      // Build overrides map
-      const overrides: Record<string, main.Identity> = {};
+      // Build overrides map: hash → Identity
+      const overrides: Record<string, Identity> = {};
       for (const commit of changes) {
         const target = mailmap[commit.committer];
         overrides[commit.hash] = target;

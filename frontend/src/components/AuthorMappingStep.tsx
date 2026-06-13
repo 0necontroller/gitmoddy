@@ -1,11 +1,11 @@
-import { Plus, Trash2, User, GitCommitHorizontal } from 'lucide-react';
-import { main } from '../../wailsjs/go/models';
+import { Plus, User, GitCommitHorizontal } from 'lucide-react';
+import { Identity, Commit } from '../../bindings/changeme/models';
 
 interface AuthorMappingStepProps {
-  mailmap: Record<number, main.Identity>;
-  setMailmap: (updater: (prev: Record<number, main.Identity>) => Record<number, main.Identity>) => void;
-  commits: main.Commit[];
-  setCommits: (updater: (prev: main.Commit[]) => main.Commit[]) => void;
+  mailmap: Record<number, Identity>;
+  setMailmap: (updater: (prev: Record<number, Identity>) => Record<number, Identity>) => void;
+  commits: Commit[];
+  setCommits: (updater: (prev: Commit[]) => Commit[]) => void;
   onNext: () => void;
   onBack: () => void;
 }
@@ -15,7 +15,7 @@ export default function AuthorMappingStep({ mailmap, setMailmap, commits, setCom
   const handleIdentityChange = (slot: number, field: 'name' | 'email', value: string) => {
     setMailmap(prev => ({
       ...prev,
-      [slot]: { ...prev[slot], [field]: value } as main.Identity
+      [slot]: { ...prev[slot], [field]: value } as Identity
     }));
   };
 
@@ -25,7 +25,7 @@ export default function AuthorMappingStep({ mailmap, setMailmap, commits, setCom
       const nextSlot = slots.length > 0 ? Math.max(...slots) + 1 : 1;
       return {
         ...prev,
-        [nextSlot]: { name: 'New Author', email: 'new@example.com' } as main.Identity
+        [nextSlot]: { name: 'New Author', email: 'new@example.com' } as Identity
       };
     });
   };
@@ -33,7 +33,7 @@ export default function AuthorMappingStep({ mailmap, setMailmap, commits, setCom
   const handleCommitChange = (commitIndex: number, newCommitterSlot: number) => {
     setCommits(prev => {
       const newCommits = [...prev];
-      newCommits[commitIndex] = { ...newCommits[commitIndex], committer: newCommitterSlot } as main.Commit;
+      newCommits[commitIndex] = { ...newCommits[commitIndex], committer: newCommitterSlot } as Commit;
       return newCommits;
     });
   };

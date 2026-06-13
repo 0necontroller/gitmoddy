@@ -1,5 +1,29 @@
-build/bin
-node_modules
-frontend/dist
+# === Wails v3 Build Outputs ===
+bin/
+*.exe
+*.app/
+*.dmg
+*.deb
+*.rpm
 
+# === Wails Auto-Generated Bindings ===
+# It is best practice to ignore these since Wails regenerates them on every build
+frontend/bindings/
+.task/
+
+# === Frontend Dependencies & Cache ===
+frontend/node_modules/
+frontend/dist/
+.eslintcache
+*.tsbuildinfo
+
+# === Local Environment & Configuration Overrides ===
+.env
+.env.local
+.env.*.local
+.wails/
+build/darwin/Assets.car
+
+# === Operating System Garbage ===
 .DS_Store
+Thumbs.db

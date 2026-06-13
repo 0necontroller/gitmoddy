@@ -1,46 +1,59 @@
-# GitModdy
+# Welcome to Your New Wails3 Project!
 
-GitModdy is a modern desktop application that allows you to easily rewrite your local Git commit history. Whether you need to fix a typo in your commit email, reassign commits to a different author, or consolidate multiple identities into one, GitModdy provides a safe, visual, and fast way to manage it all without memorizing complex Git commands.
+Congratulations on generating your Wails3 application! This README will guide you through the next steps to get your project up and running.
 
-## Features
+## Getting Started
 
-- **Select Repository**: Easily browse and select any local Git repository.
-- **Visual Identity Mapping**: The app automatically scans all commits and groups them by unique identities. You can edit existing identities or add completely new ones.
-- **Commit Assignment**: Go through your commits and visually assign them to specific identities via a simple dropdown interface.
-- **Dry Run Preview**: Preview exactly which commits will be altered before making any destructive changes.
-- **Fast Execution**: Uses native Go bindings to efficiently invoke `git-filter-repo` and rewrite the commit history.
+1. Navigate to your project directory in the terminal.
 
-## Prerequisites
+2. To run your application in development mode, use the following command:
 
-Before using GitModdy, ensure that you have the following installed on your system:
+   ```
+   wails3 dev
+   ```
 
-- **Git**
-- **git-filter-repo**: This is the engine that powers the history rewrite.
-  - Install via python: `pip install git-filter-repo`
-  - macOS: `brew install git-filter-repo`
-  - Linux: Your package manager usually provides `git-filter-repo`.
-  - More info: [git-filter-repo repository](https://github.com/newren/git-filter-repo)
+   This will start your application and enable hot-reloading for both frontend and backend changes.
 
-## Tech Stack
+3. To build your application for production, use:
 
-- **Backend**: [Wails](https://wails.io/) and Go
-- **Frontend**: React, TypeScript, Vite, and Tailwind CSS v4
-- **Icons**: Lucide React
+   ```
+   wails3 build
+   ```
 
-## Development
+   This will create a production-ready executable in the `build` directory.
 
-To run GitModdy in live development mode with hot-reloading:
+## Exploring Wails3 Features
 
-```bash
-wails dev
-```
+Now that you have your project set up, it's time to explore the features that Wails3 offers:
 
-## Building
+1. **Check out the examples**: The best way to learn is by example. Visit the `examples` directory in the `v3/examples` directory to see various sample applications.
 
-To build a redistributable, production-ready package:
+2. **Run an example**: To run any of the examples, navigate to the example's directory and use:
 
-```bash
-wails build
-```
+   ```
+   go run .
+   ```
 
-> **Warning:** GitModdy actively rewrites Git history. While `git-filter-repo` is incredibly safe and usually preserves original references, it is highly recommended to make a backup of your repository before performing history modifications. You will need to force push (`git push --force`) your changes to remote servers after rewriting.
+   Note: Some examples may be under development during the alpha phase.
+
+3. **Explore the documentation**: Visit the [Wails3 documentation](https://v3.wails.io/) for in-depth guides and API references.
+
+4. **Join the community**: Have questions or want to share your progress? Join the [Wails Discord](https://discord.gg/JDdSxwjhGf) or visit the [Wails discussions on GitHub](https://github.com/wailsapp/wails/discussions).
+
+## Project Structure
+
+Take a moment to familiarize yourself with your project structure:
+
+- `frontend/`: Contains your frontend code (HTML, CSS, JavaScript/TypeScript)
+- `main.go`: The entry point of your Go backend
+- `app.go`: Define your application structure and methods here
+- `wails.json`: Configuration file for your Wails project
+
+## Next Steps
+
+1. Modify the frontend in the `frontend/` directory to create your desired UI.
+2. Add backend functionality in `main.go`.
+3. Use `wails3 dev` to see your changes in real-time.
+4. When ready, build your application with `wails3 build`.
+
+Happy coding with Wails3! If you encounter any issues or have questions, don't hesitate to consult the documentation or reach out to the Wails community.

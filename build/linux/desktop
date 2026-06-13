@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=GitModdy
+Comment=A git commit author and committer name/email rewrite tool.
+# The Exec line includes %u to pass the URL to the application
+Exec=/usr/local/bin/mytestapp %u
+Terminal=false
+Type=Application
+Icon=mytestapp
+Categories=Utility;
+StartupWMClass=mytestapp
+
+ 
