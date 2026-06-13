@@ -160,9 +160,27 @@ export default function CommitDiffView() {
       {/* ── Diff content ── */}
       <div className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
         {loading && (
-          <div className="flex items-center justify-center h-40 text-[#555760] text-[12px] gap-2">
-            <div className="w-4 h-4 border-2 border-[#555760] border-t-[#ec4f31] rounded-full animate-spin" />
-            Loading diff…
+          <div className="p-6 space-y-6 animate-pulse">
+            {/* Header / Commit metadata card skeleton */}
+            <div className="bg-[#252629] border border-white/[0.08] rounded-xl p-5 space-y-4">
+              <div className="h-5 bg-[#3a3b3f] rounded w-2/3" />
+              <div className="h-4 bg-[#3a3b3f] rounded w-1/2" />
+              <div className="pt-3 border-t border-white/[0.06] flex gap-3">
+                <div className="h-3.5 bg-[#3a3b3f] rounded w-24" />
+                <div className="h-3.5 bg-[#3a3b3f] rounded w-32" />
+                <div className="h-3.5 bg-[#238636]/20 rounded w-16" />
+                <div className="h-3.5 bg-[#f85149]/20 rounded w-16" />
+              </div>
+            </div>
+
+            {/* Diff lines skeleton */}
+            <div className="space-y-3 font-mono">
+              <div className="h-3.5 bg-[#3a3b3f]/60 rounded w-5/6 px-4" />
+              <div className="h-3.5 bg-[#238636]/15 rounded w-full px-4" />
+              <div className="h-3.5 bg-[#238636]/15 rounded w-4/5 px-4" />
+              <div className="h-3.5 bg-[#f85149]/15 rounded w-11/12 px-4" />
+              <div className="h-3.5 bg-[#3a3b3f]/60 rounded w-3/4 px-4" />
+            </div>
           </div>
         )}
 
